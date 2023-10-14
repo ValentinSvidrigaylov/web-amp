@@ -1,0 +1,85 @@
+.checkbox-wrapper {
+    --effect-toggled-color: #007e0a;
+    --effect-color: #ff2600;
+    --effect-border-color: #747474;
+    position: relative;
+}
+
+input.checked {
+    background-color: var(--effect-toggled-color) !important;
+    position: relative;
+    transform: translateX(10px) !important;
+  }
+
+/*input.checked::before {
+    content: "\2714";
+    font-size: 1.5em;
+    color: #fff;
+    position: absolute;
+    right: -5px;
+    top: -8px;
+  }*/
+
+  .checkbox-wrapper input[type="checkbox"]:disabled {
+    border-color: #c0c0c0;
+    background-color: #c0c0c0;
+  }
+  
+  .checkbox-wrapper input[type="checkbox"]:disabled + span {
+    color: #c0c0c0;
+  }
+  
+  .checkbox-wrapper input[type="checkbox"]:focus {
+    box-shadow: 0 0 20px var(--effect-color);    
+  }
+
+  .checkbox-wrapper input[type="checkbox"].checked:focus {
+    box-shadow: 0 0 20px var(--effect-toggled-color);    
+  }
+
+  .checkbox-wrapper input[type="checkbox"] {
+    position: absolute;
+    /* removing default appearance */
+    -webkit-appearance: none;
+    appearance: none;
+    /* creating a custom design */
+    left: -1.8em;
+    width: 1.6em;
+    height: 1.6em;
+    border-radius: 0.15em;
+    margin-right: 0.75em;
+    /*border: 0.15em solid var(--effect-border-color);*/
+    background-color: var(--effect-color);
+    outline: none;
+    cursor: pointer;
+    transition: 0.2s;
+    transform: translateX(0);
+  }
+
+/*  .checkbox-wrapper input[type="checkbox"]::before {
+    content: '';
+    display: block;
+    width: 220%;
+    height: 120%;
+    background-color: #333333;
+    transform: translateX(0px);
+    transition: 0s;
+    z-index: -1;
+  }
+
+  .checkbox-wrapper input[type="checkbox"]:checked::before {
+    transform: translateX(-10px);
+    transition: 0s;
+  }*/
+
+    .track {
+        position: absolute;
+        left: -2.1em;
+        width: 2.8rem;
+        height: 2rem;
+        top: -0.2rem;
+        z-index: -1;
+        background-color: #333333;
+        border: 0.1rem solid #1a1a1a;
+        border-radius: 10%;
+    }
