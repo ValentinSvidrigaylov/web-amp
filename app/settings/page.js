@@ -42,7 +42,7 @@ mappingSection.appendChild(outer);
       <Link href="/">To main page</Link>
       <h2>Settings</h2>
       <div className={styles.description}>
-      please, write full name of key (if it's not one letter)
+      please, write full name of key (if it is not one letter)
       </div>
       <h2>Key mapping</h2>
       <div id="key-mapping-section"></div>      

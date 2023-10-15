@@ -31,39 +31,46 @@ Number.prototype.fromExponent = function() {
 //let mic = new Tone.UserMedia().connect(meter).toDestination();
 
 export default function Home(props) {
-const [mic, setMic] = useState(new Tone.UserMedia());
+const [mic, setMic] = useState();
 
-const [distortion, setDistortion] = useState(new Tone.Distortion(10).toDestination())
+const [distortion, setDistortion] = useState()
 //let [distortion, setDistortion] = [new Tone.Distortion(0.3), (v)=>{distortion=v}];
 const [isDistortion, setIsDistortion] = useState(false)
 //let [isDistortion, setIsDistortion] = [false, (v)=>{isDistortion=v}]
 //const feedbackDelay = new Tone.FeedbackDelay("8n", 0.5).toDestination();
 //const tom = new Tone.UserMedia().connect(feedbackDelay);
 //tom.open();
-const [gain, setGain] = useState(new Tone.Gain(250).toDestination())
+const [gain, setGain] = useState()
 //let [gain, setGain] = [new Tone.Gain(0.3), (v)=>{gain=v}];
 const [isGain, setIsGain] = useState(false)
 //let [isGain, setIsGain] = [false, (v)=>{isGain=v}]
-const [bitcrusher, setBitcrusher] = useState(new Tone.BitCrusher(8).toDestination())
-bitcrusher.wet.value = 1;
+const [bitcrusher, setBitcrusher] = useState()
 const [isBitcrusher, setIsBitcrusher] = useState(false)
-const [chorus, setChorus] = useState(new Tone.Chorus(4,2.5,1).toDestination().start())
+const [chorus, setChorus] = useState()
 //let [chorus, setChorus] = [new Tone.Chorus(0.3), (v)=>{chorus=v}];
 const [isChorus, setIsChorus] = useState(false)
 //let [isChorus, setIsChorus] = [false, (v)=>{isChorus=v}]
-const [delay, setDelay] = useState(new Tone.FeedbackDelay("8n", .8).toDestination())
+const [delay, setDelay] = useState()
 const [isDelay, setIsDelay] = useState(false)
-const [reverb, setReverb] = useState(new Tone.Reverb(30).toDestination()) //memory leaks because of this value
+const [reverb, setReverb] = useState() //memory leaks because of this value
 const [isReverb, setIsReverb] = useState(false)
 const effects = [[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb]];
+
 useEffect(()=>{
-  console.log('state: ', mic.state != "started")
-  /*if (mic.state != "started") {
-    mic.open()
-    Tone.start()
-  } */ 
+  setMic(new Tone.UserMedia().toDestination());
+  setDistortion(new Tone.Distortion(10).toDestination())
+  setGain(new Tone.Gain(250).toDestination())   
+  setBitcrusher(new Tone.BitCrusher(8).toDestination())
+  setChorus(new Tone.Chorus(4,2.5,1).toDestination().start())
+  setDelay(new Tone.FeedbackDelay("8n", .8).toDestination())
+  setReverb(new Tone.Reverb(30).toDestination())
 },[]);
 
+useEffect(()=>{
+  if (typeof bitcrusher == Tone.BitCrusher) {
+    bitcrusher.wet.value = 1;
+  }
+},[bitcrusher])
 //setInterval(() => console.log(meter.getValue()), 100);
 // const vol = new Tone.Volume(-120000000).toDestination();
 // const vargain = new Tone.Gain(1500).toDestination();

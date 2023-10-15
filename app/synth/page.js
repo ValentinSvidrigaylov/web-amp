@@ -1,8 +1,9 @@
 'use client'
-import styles from './page.module.css'
-import { useEffect } from 'react';
+import styles from '../page.module.css'
+import * as Tone from 'tone'
+import { useEffect, useState } from 'react';
 
-function Synth() {
+export default function Synth() {
 const [octave, setOctave] = useState(); //init octave
 console.log("initial octave: ", octave)
 const [keysLength, setKeysLength] = useState();
@@ -20,7 +21,7 @@ useEffect(()=>{
     const key_width = 5;
     const keyborder_width = 1.25;
     const key_height = 280;
-    //const gain = new Tone.Gain(100).toDestination();
+    const gain = new Tone.Gain(100).toDestination();
     var chorus = new Tone.Chorus(4, 5, 1).toDestination().start();
     //const synth = new Tone.PolySynth(Tone.Synth).toDestination();
     const synth = new Tone.Sampler({
