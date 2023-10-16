@@ -1,5 +1,5 @@
 import { Instrument } from 'tone/build/esm/instrument/Instrument';
-import './effects.css'
+import '../css/effects.css'
 import { useState, useEffect } from "react";
 
 const EffectValue = ({ id, label, trueBypass, setTrueBypass, defaultValue, change, min, max, strict, ...props }) => {

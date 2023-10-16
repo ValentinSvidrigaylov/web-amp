@@ -5,8 +5,9 @@ import * as Tone from 'tone'
 import "./libs/tonejs-instruments-master/Tonejs-Instruments.js"
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import EffectToggle from "./EffectToggle.js";
-import EffectValue from "./EffectValue.js";
+import EffectToggle from "./components/EffectToggle.js";
+import EffectValue from "./components/EffectValue.js";
+import Navbar from "./components/Navbar.js"
 
 Number.prototype.fromExponent = function() {
   var data = String(this).split(/[eE]/);
@@ -308,36 +309,36 @@ function changeReverbValue(value) {
           </div>*/
   return (
     <main className={styles.main}>
-      <Link href="/settings">To settings</Link>
-      <div className={styles.description}>
-        Simple guitar amp based on <a href="https://tonejs.github.io/" target='blank'>tone js</a>
+      <Navbar></Navbar>
+      <div className={[styles.description, 'center-block text-center m-2']} style={{lineHeight: '3rem'}}>
+        <span>Simple guitar amp based on <h5><a href="https://tonejs.github.io/" target='blank'>tone js</a></h5></span>
       </div>
       <button id='mic' onClick={allowMicContext}>Allow mic context</button>
       <div className="center-block container">
-        <h2 className='text-center'>Effects:</h2>
-        <div className="row">
+        <h2 className='text-center my-3'>Effects:</h2>
+        <div className="row effect">
           <EffectToggle label="Distortion" id="distortion" checked={false} change={addDistortion} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
           <EffectValue label="DistortionValue" id="distortionvalue" defaultValue={10} change={changeDistortionValue} min={0} max={10000} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
         </div>
-        <div className="row">
+        <div className="row effect">
           <EffectToggle label="Gain" id="gain" checked={false} change={addGain} trueBypass={isGain} setTrueBypass={setIsGain}/>
           <EffectValue label="GainValue" id="gainvalue" defaultValue={250} change={changeGainValue} min={0} max={3.4028234663852886e+38.fromExponent()} trueBypass={isGain} setTrueBypass={setIsGain}/>
         </div>
-        <div className="row">
+        <div className="row effect">
           <EffectToggle label="Bitcrusher" id="bitcrusher" checked={false} change={addBitcrusher} trueBypass={isBitcrusher} setTrueBypass={setIsBitcrusher}/>
           <EffectValue label="BitcrusherValue" id="bitcrushervalue" defaultValue={10} change={changeBitcrusherValue} min={1} max={16} trueBypass={isBitcrusher} setTrueBypass={setIsBitcrusher} strict={[1,1]}/>
         </div>
-        <div className="row">
+        <div className="row effect">
           <EffectToggle label="Chorus" id="chorus" checked={false} change={addChorus} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
           <EffectValue label="ChorusFrequencyValue" id="chorusvalue" defaultValue={4} change={changeChorusFrequencyValue} min={0} max={15} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
           <EffectValue label="ChorusDelayTimeValue" id="chorusvalue" defaultValue={100} change={changeChorusDelayValue} min={0} max={250} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
           <EffectValue label="ChorusDepthValue" id="chorusvalue" defaultValue={0.2} change={changeChorusDepthValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
         </div>
-        <div className="row">
+        <div className="row effect">
           <EffectToggle label="Delay" id="delay" checked={false} change={addDelay} trueBypass={isDelay} setTrueBypass={setIsDelay}/>
           <EffectValue label="DelayValue" id="delay" defaultValue={0.1} change={changeDelayValue} min={0} max={1} trueBypass={isDelay} setTrueBypass={setIsDelay}/>
         </div>
-        <div className="row">
+        <div className="row effect">
           <EffectToggle label="Reverb" id="reverb" checked={false} change={addReverb} trueBypass={isReverb} setTrueBypass={setIsReverb}/>
           <span>*values above 150 requires a lot of memory, setting this above 150 may cause browser to crash</span>
           <EffectValue label="ReverbValue" id="reverb" defaultValue={30} change={changeReverbValue} min={0} max={30} trueBypass={isReverb} setTrueBypass={setIsReverb}/>

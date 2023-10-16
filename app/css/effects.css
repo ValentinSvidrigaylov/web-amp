@@ -3,6 +3,8 @@
     --effect-color: #ff2600;
     --effect-border-color: #747474;
     position: relative;
+    left: 1.8em;
+    margin: 1rem;
 }
 
 input.checked {

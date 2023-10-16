@@ -1,4 +1,4 @@
-/*:root {
+:root {
   --max-width: 1100px;
   --border-radius: 12px;
   --font-mono: ui-monospace, Menlo, Monaco, 'Cascadia Mono', 'Segoe UI Mono',
@@ -86,18 +86,27 @@ body {
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
+  color: white !important;
+  /* background: linear-gradient(
       to bottom,
       transparent,
       rgb(var(--background-end-rgb))
     )
-    rgb(var(--background-start-rgb));
+    rgb(var(--background-start-rgb)); */
+  background-color: #ffffff10 !important;
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+  color: #6da9ee !important;
+  text-decoration: none !important;
+}
+
+a:hover {
+  text-decoration: underline !important
+}
+
+a:visited {
+  color: #6d85ee !important;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -109,7 +118,7 @@ a {
 button {
   padding: 1em;
   border-radius: 20% !important;
-  box-shadow: #f7f7f7 2px 2px 4px 4px;
+  box-shadow: #f7f7f7 0 0 4px 4px;
 }
 
 .center-block {
@@ -122,12 +131,22 @@ button {
   width: 80vw;
 }
 
-/*.effect input {
-  position: absolute;
-  opacity: 0;
+.effect {
+  border: 3px solid white;
+  border-radius: 15px;
+  box-shadow: #f7f7f7 0px 0px 20px 1px;
+  margin: 1rem;
+}
+
+.effect input[type="number"] {
+  position: relative;
   cursor: pointer;
+  width: 15vw !important;
+  margin: 1rem !important;
+
+  /* opacity: 0;
   height: 0;
-  width: 0;
+  width: 0; */
 }
 
 .effect-toggle {
@@ -138,7 +157,7 @@ button {
   width: 25px;
   background-color: #eee;
 }
-*/
+
 #distortion[checked] {
   color: red;
 }

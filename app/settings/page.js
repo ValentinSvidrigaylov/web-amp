@@ -5,6 +5,7 @@ import * as Tone from 'tone'
 import "../libs/tonejs-instruments-master/Tonejs-Instruments.js"
 import { useEffect } from 'react'
 import Link from 'next/link'
+import Navbar from '../components/Navbar'
 
 export default function Settings() {
 
@@ -39,7 +40,7 @@ mappingSection.appendChild(outer);
 
   return (
     <main className={styles.main}>
-      <Link href="/">To main page</Link>
+      <Navbar></Navbar>
       <h2>Settings</h2>
       <div className={styles.description}>
       please, write full name of key (if it is not one letter)

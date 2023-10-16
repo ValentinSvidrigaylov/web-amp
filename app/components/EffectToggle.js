@@ -1,4 +1,4 @@
-import './effects.css'
+import '../css/effects.css'
 import { useEffect, useState } from "react";
 
 const EffectToggle = ({ id, label, trueBypass, setTrueBypass, checked, change, ...props }) => {
