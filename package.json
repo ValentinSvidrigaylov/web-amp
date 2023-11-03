@@ -16,7 +16,10 @@
     "tone": "^14.7.77"
   },
   "devDependencies": {
+    "@types/node": "20.8.9",
+    "@types/react": "18.2.33",
     "eslint": "^8",
-    "eslint-config-next": "13.5.4"
+    "eslint-config-next": "13.5.4",
+    "typescript": "5.2.2"
   }
 }

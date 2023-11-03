@@ -3,6 +3,7 @@ import styles from '../page.module.css'
 import * as Tone from 'tone'
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { getKeysByValue } from '../libs/essentials.js';
 
 export default function Synth() {
 const [octave, setOctave] = useState(); //init octave
@@ -55,10 +56,6 @@ useEffect(()=>{
     
     //octaveText.textContent = 'Least octave: '+ octave;
     //keysText.textContent = 'Keys: '+ keysLength;
-    
-    function getKeysByValue(object, value) {
-      return Object.keys(object).filter(key => object[key] === value);
-    }
 
     setTest(()=>(a)=>{console.log(a)})
     

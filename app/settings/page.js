@@ -10,6 +10,7 @@ export default function Settings() {
 
 const [increaseOctaveKey, setIncreaseOctaveKey] = useState('');
 const [decreaseOctaveKey, setDecreaseOctaveKey] = useState('');
+const [stringsAmount, setStringsAmount] = useState(6);
 
 useEffect(()=>{
 setIncreaseOctaveKey(localStorage.getItem('octavechangekeys') ? JSON.parse(localStorage.getItem('octavechangekeys'))[0] : '')
@@ -43,6 +44,32 @@ outer.appendChild(keySelect);
 mappingSection.appendChild(outer);
 }
 
+let strings = JSON.parse(localStorage.getItem('strings')) || function(){localStorage.setItem('strings', JSON.stringify(["1","2","3","4","5","6"]));return ["1","2","3","4","5","6"]}();
+let stringsMappingSection = document.getElementById('strings-mapping-section');
+stringsMappingSection.innerHTML = '';
+
+for (let i = 0; i < stringsAmount; i++) {
+  let stringSelect = document.createElement('input');
+  stringSelect.type = 'text';
+  stringSelect.maxlength = '1';
+  stringSelect.value = strings[i] ? strings[i] : '';
+  stringSelect.name = `string${i}`;
+  stringSelect.id = `string${i}`;
+  stringSelect.onchange = (e) => {
+  let allStrings = JSON.parse(localStorage.getItem('strings'));
+  allStrings[i] = stringSelect.value;
+  localStorage.setItem('strings', JSON.stringify(allStrings));
+  };
+  let label = document.createElement('label');
+  label.textContent = `String ${i+1}:`;
+  label.htmlFor = `string${i}`;
+  let outer = document.createElement('div');
+  outer.classList.add('m-2')
+  outer.appendChild(label);
+  outer.appendChild(stringSelect);
+  stringsMappingSection.appendChild(outer);
+  }
+
 // let controlsMappingSection = document.getElementById('controls-mapping-section')
 // controlsMappingSection.innerHTML = '';
 
@@ -59,6 +86,20 @@ function decreaseOctave(e) {
   setDecreaseOctaveKey(e.target.value)
   localStorage.setItem('octavechangekeys', JSON.stringify([localStorage.getItem('octavechangekeys') ? JSON.parse(localStorage.getItem('octavechangekeys'))[0] : null, e.target.value]))
 }
+
+function stringsChange(e) {
+  setStringsAmount(e.target.value)
+  localStorage.setItem('stringsAmount', JSON.stringify(e.target.value))
+}
+
+useEffect(()=>{
+  if (localStorage || !localStorage.getItem('stringsAmount')) {
+     localStorage.setItem('stringsAmount', JSON.stringify(6))
+  }
+  setStringsAmount(localStorage.getItem('stringsItem'))
+},[])
+
+
 
   return (
     <main className={styles.main}>
@@ -80,6 +121,12 @@ function decreaseOctave(e) {
         </div>
       </div>
       <h3>Guitar</h3>
+      <div id="strings-mapping-section"></div>
+        <div className='m-1'>
+          <label htmlFor='strings'>Strings amount: </label>
+          <input id="strings" type='number' value={decreaseOctaveKey} onInput={(e)=>{stringsChange(e)}}/>
+        </div>
+      <div id="frets-mapping-section"></div>
     </main>
   )
 }

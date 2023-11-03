@@ -92,7 +92,12 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb)); */
-  background-color: #ffffff10 !important;
+  background-color: #242424 !important;
+}
+
+input {
+  color: white !important;
+  background-color: #3b3b3b ;
 }
 
 a {
@@ -147,7 +152,7 @@ button {
   cursor: pointer;
   width: 15vw !important;
   margin: 1rem !important;
-
+  
   /* opacity: 0;
   height: 0;
   width: 0; */
