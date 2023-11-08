@@ -328,7 +328,7 @@ useEffect(()=>{
          let fret_heigh_increment = (2**(1/12))**i*30
          let fret_height = (2**(1/12))**1*30*2
          let pitch_note = intToNote(noteToInt(guitarTuning[j])+i+1);
-         t_frets_triggers = [...t_frets_triggers, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={i} fill='transparent' fillOpacity="0" note={pitch_note} onClick={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding)}}/>];
+         t_frets_triggers = [...t_frets_triggers, <circle style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}} r="35" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2} fill='darkblue' id={pitch_note}/>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={i} fill='transparent' fillOpacity="0" note={pitch_note} onClick={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding); console.log(e.target.parentElement.querySelector('circle')); e.target.parentElement.querySelector(`#${pitch_note}`).style.display = [...document.getElementById('strings').getAttribute('pitchbinding').split(',')][j] == pitch_note ? 'block' : 'none'; console.log(e.target.parentElement.querySelector(`#${pitch_note}`).style)}}/>];
       }
       t_strings.push(t_frets_triggers)
       t_frets_triggers = []
@@ -390,6 +390,46 @@ useEffect(()=>{
       }
       }
 }
+
+window.onkeyup = (e)=>{
+   let strings = JSON.parse(localStorage.getItem('strings')) || function(){localStorage.setItem('strings', JSON.stringify(["1","2","3","4","5","6"]));return ["1","2","3","4","5","6"]}();
+   // console.log('ock: ',octavechangekeys)
+   // console.log(getKeysByValue(octavechangekeys, e.key.toLowerCase()))
+   // console.log(getKeysByValue(octavechangekeys, e.key.toLowerCase()).length > 0)
+   if (getKeysByValue(strings, e.key.toLowerCase()).length > 0) {
+   //pathname.match(/\w+(\/\w+)[/]?$/)[1]
+   e.stopPropagation(); 
+   //const notes = JSON.parse(localStorage.getItem('notes')) || function(){localStorage.setItem('notes', JSON.stringify(["C","D","C#","E","D#","F","G","F#","A","G#","B","A#"]));return ["C","D","C#","E","D#","F","G","F#","A","G#","B","A#"]}();
+   
+   console.log(strings);
+   let pressedKeyMapped = getKeysByValue(strings, e.key.toLowerCase());
+   console.log(e.key.toLowerCase());
+   let stringsOuter = document.getElementById('strings');
+   if (pressedKeyMapped != undefined) {
+   for (let i = 0; i < pressedKeyMapped.length; i++ ){
+   // let mappedKey = Number(pressedKeyMapped[i])-Number(pressedKeyMapped[i])%12+keyMap[pressedKeyMapped[i]%12];
+   // console.log(pressedKeyMapped)
+   // console.log(strings.indexOf(pressedKeyMapped[i]))
+   stringsOuter.querySelector(`#string-${Number(pressedKeyMapped)+1}`).dispatchEvent(new Event('mouseup'))
+   console.log('key',Number(pressedKeyMapped)+1);
+   // console.log('mapped',mappedKey );
+   // console.log(synthsvg.children)
+   // console.log(synthsvg.children[mappedKey])
+   // synthsvg.children[mappedKey].dispatchEvent(new Event('mousedown'));
+   // console.log(synthsvg.children[mappedKey].getAttribute('isPressed'));
+   /*if (!synthsvg.children[mappedKey].getAttribute("isPressed")) {
+   //synthsvg.children[mappedKey].dispatchEvent(new Event('mousedown'));
+   synthsvg.children[mappedKey].setAttribute("isPressed",true);
+   }*/
+   }
+   }
+   }
+}
+
+useEffect(()=> () => {
+   window.onkeydown = null;
+   window.onkeyup = null;
+},[]);
 
 // let allowMicContext=()=>{};
 // let addDistortion=()=>{};
@@ -1649,49 +1689,49 @@ useEffect(()=>{
          {/* { <rect width="350" height="500" y="0"/> } */}
          <g transform='rotate(-0.55)'>
             <rect width="15" height="5800" x="0" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={0-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-1' data-tune={guitarTuning[0]} data-currentTune={pitchBinding[0]} onMouseDown={(e)=>{Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}} onMouseUp={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}} onMouseOut={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={0-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-1' data-tune={guitarTuning[0]} data-currentTune={pitchBinding[0]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(0, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={0} fill='transparent' fillOpacity="0" note={guitarTuning[0]} onClick={(e)=>{let t_pitchBinding = [...pitchBinding];console.log(t_pitchBinding);t_pitchBinding[0] = guitarTuning[0];setPitchBinding(t_pitchBinding)}}/>
+               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={0} fill='transparent' fillOpacity="0" note={guitarTuning[0]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];console.log(t_pitchBinding);t_pitchBinding[0] = guitarTuning[0];setPitchBinding(t_pitchBinding)}}/>
                { stringsTriggers[0] }
             </g>
          </g>
          <g transform='rotate(-0.2)'>
             <rect width="17.5" height="6000" x="100" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={100-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-2' data-tune={guitarTuning[1]} data-currentTune={pitchBinding[1]} onMouseDown={(e)=>{Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}} onMouseUp={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}} onMouseOut={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={100-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-2' data-tune={guitarTuning[1]} data-currentTune={pitchBinding[1]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-100, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={1} fill='transparent' fillOpacity="0" note={guitarTuning[1]} onClick={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[1] = guitarTuning[1];setPitchBinding(t_pitchBinding)}}/>
+               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={1} fill='transparent' fillOpacity="0" note={guitarTuning[1]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[1] = guitarTuning[1];setPitchBinding(t_pitchBinding)}}/>
                { stringsTriggers[1] }
             </g>
          </g>
          <g transform='rotate(0.25)'>
             <rect width="20" height="6200" x="200" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={200-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-3' data-tune={guitarTuning[2]} data-currentTune={pitchBinding[2]} onMouseDown={(e)=>{Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}} onMouseUp={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}} onMouseOut={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={200-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-3' data-tune={guitarTuning[2]} data-currentTune={pitchBinding[2]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-200, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={2} fill='transparent' fillOpacity="0" note={guitarTuning[2]} onClick={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[2] = guitarTuning[2];setPitchBinding(t_pitchBinding)}}/>
+               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={2} fill='transparent' fillOpacity="0" note={guitarTuning[2]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[2] = guitarTuning[2];setPitchBinding(t_pitchBinding)}}/>
                { stringsTriggers[2] }
             </g>
          </g>
          <g transform='rotate(0.65)'>
             <rect width="22.5" height="6400" x="300" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={300-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-4' data-tune={guitarTuning[3]} data-currentTune={pitchBinding[3]} onMouseDown={(e)=>{Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}} onMouseUp={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}} onMouseOut={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={300-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-4' data-tune={guitarTuning[3]} data-currentTune={pitchBinding[3]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-300, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={3}  fill='transparent' fillOpacity="0" note={guitarTuning[3]} onClick={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[3] = guitarTuning[3];setPitchBinding(t_pitchBinding)}}/>
+               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={3}  fill='transparent' fillOpacity="0" note={guitarTuning[3]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[3] = guitarTuning[3];setPitchBinding(t_pitchBinding)}}/>
                { stringsTriggers[3] }
             </g>
          </g>
          <g transform='rotate(1)'>
             <rect width="25" height="6550" x="400" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={400-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-5' data-tune={guitarTuning[4]} data-currentTune={pitchBinding[4]} onMouseDown={(e)=>{Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}} onMouseUp={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}} onMouseOut={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={400-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-5' data-tune={guitarTuning[4]} data-currentTune={pitchBinding[4]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-400, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={4} fill='transparent' fillOpacity="0" note={guitarTuning[4]} onClick={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[4] = guitarTuning[4];setPitchBinding(t_pitchBinding)}}/>
+               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={4} fill='transparent' fillOpacity="0" note={guitarTuning[4]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[4] = guitarTuning[4];setPitchBinding(t_pitchBinding)}}/>
                { stringsTriggers[4] }
             </g>
          </g>
          <g transform='rotate(1.35)'>
             <rect width="27.5" height="6750" x="500" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={500-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-6' data-tune={guitarTuning[5]} data-currentTune={pitchBinding[5]} onMouseDown={(e)=>{Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}} onMouseUp={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}} onMouseOut={(e)=>{Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={500-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-6' data-tune={guitarTuning[5]} data-currentTune={pitchBinding[5]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(179.9) translate(-500, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={5} fill='transparent' fillOpacity="0" note={guitarTuning[5]} onClick={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[5] = guitarTuning[5];setPitchBinding(t_pitchBinding)}}/>
+               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={5} fill='transparent' fillOpacity="0" note={guitarTuning[5]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[5] = guitarTuning[5];setPitchBinding(t_pitchBinding)}}/>
                { stringsTriggers[5] }
             </g>
          </g>
@@ -2169,7 +2209,7 @@ useEffect(()=>{
   </g>
 </svg>
 
-      <button id='mic' onClick={allowMicContext} style={{zIndex:1}}>Allow mic context</button>
+      <button id='mic' onClickCapture={allowMicContext} style={{zIndex:1}}>Allow mic context</button>
       <div className="center-block container">
         <h2 className='text-center my-3' style={{zIndex:1}}>Effects:</h2>
         <div className="row effect">
