@@ -304,11 +304,16 @@ let distance_to_nut = 5480;
 let last_index = [];
 
 useEffect(()=>{
-   let t_last_index = [];
-   for (let i = 0; i < stringsAmount; i++) {
-      t_last_index.push(last_index.length > i ? last_index[i] : 0)
+   console.log(stringsAmount)
+   if (stringsAmount!=null) {
+      let t_last_index = [];
+      for (let i = 0; i < stringsAmount; i++) {
+         t_last_index.push(last_index.length > i ? last_index[i] : 0)
+      }
+      last_index = t_last_index
+      console.log(t_last_index)
+      console.log(`last index: ${t_last_index}`);
    }
-   last_index = t_last_index
 },[stringsAmount])
 
 useEffect(()=>{
@@ -329,7 +334,15 @@ useEffect(()=>{
          t_frets = [...t_frets, <rect height="10" width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={i}/>];
       }
    }
+   // <g className='circle' style={{display: pitchBinding[0] == guitarTuning[0] ? 'block' : 'none'}}><circle r="40" cx={-((2**(1/12))**0*30/2)/6} cy={-320+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))-320)/2} fill='darkblue' id={guitarTuning[0]}/><text textAnchor="middle" x={((2**(1/12))**0*30/2)/6} y={-320+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))-320)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{guitarTuning[0]}</text></g>
+   // <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={0} fill='transparent' fillOpacity="0" note={guitarTuning[0]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];console.log(t_pitchBinding);e.target.parentElement.querySelectorAll('.circle')[last_index[0]].style.display = 'none';t_pitchBinding[0] = guitarTuning[0]; setPitchBinding(t_pitchBinding); console.log(last_index[0]); last_index[0] = 0;}}/>
    for (let j = 0; j < stringsAmount; j++) {
+      let distance_from_nut = -320;
+      let fret_size = distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))));
+      let fret_heigh_increment = ((2**(1/12))**0*30/2)
+      let fret_height = (2**(1/12))**1*30*2
+      let pitch_note = guitarTuning[j];
+      t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))+distance_from_nut/8)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))+distance_from_nut/8)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={0} fill='transparent' fillOpacity="0" note={pitch_note} onClickCapture={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding); console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; e.target.parentElement.querySelectorAll('.circle')[0].style.display = 'block'; last_index[j] = 0; console.log(e.target.parentElement.querySelectorAll('.circle')[0].style)}}/>];
       for (let i = 0; i < fretsAmount; i++) {
          // console.log(i)
          let distance_from_nut = distance_to_nut*(1-1/((2**(1/12))**i));
@@ -337,7 +350,7 @@ useEffect(()=>{
          let fret_heigh_increment = (2**(1/12))**i*30
          let fret_height = (2**(1/12))**1*30*2
          let pitch_note = intToNote(noteToInt(guitarTuning[j])+i+1);
-         t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" x={-fret_heigh_increment/6} y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={i} fill='transparent' fillOpacity="0" note={pitch_note} onClick={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding); console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[i].style.display = 'block'; e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; last_index[j] = i; console.log(e.target.parentElement.querySelectorAll('.circle')[i].style)}}/>]; 
+         t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={i+1} fill='transparent' fillOpacity="0" note={pitch_note} onClickCapture={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding); console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; e.target.parentElement.querySelectorAll('.circle')[i+1].style.display = 'block'; last_index[j] = i+1; console.log(e.target.parentElement.querySelectorAll('.circle')[i+1].style)}}/>]; 
       }
       t_strings.push(t_frets_triggers)
       t_frets_triggers = []
@@ -364,13 +377,64 @@ useEffect(()=>{
 useEffect(()=>{
    console.log(pitchBinding)
 },[pitchBinding])
-
+// var map = {}; // You could also use an array
+// onkeydown = onkeyup = function(e){
+//     e = e || event; // to deal with IE
+//     map[e.keyCode] = e.type == 'keydown';
+//     /* insert conditional here */
+// }
+var map = {};
    window.onkeydown = (e)=>{
+      map[e.key.toLowerCase()] = e.type == 'keydown';
       let strings = JSON.parse(localStorage.getItem('strings')) || function(){localStorage.setItem('strings', JSON.stringify(["1","2","3","4","5","6"]));return ["1","2","3","4","5","6"]}();
+      let fretting_keys = JSON.parse(localStorage.getItem('frettingKeys')) || function(){localStorage.setItem('frettingKeys', JSON.stringify(["q","w","e","r","t","y","u","i","o","p","[","]","a","s","d","f","g","h","j","k","l",";"]));return ["q","w","e","r","t","y","u","i","o","p","[","]","a","s","d","f","g","h","j","k","l",";"]}();
       // console.log('ock: ',octavechangekeys)
       // console.log(getKeysByValue(octavechangekeys, e.key.toLowerCase()))
       // console.log(getKeysByValue(octavechangekeys, e.key.toLowerCase()).length > 0)
-      if (getKeysByValue(strings, e.key.toLowerCase()).length > 0) {
+      console.log(getKeysByValue(strings, 'alt'.toLowerCase()))
+      console.log(Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])))
+      console.log(`assertion: ${(getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0)}`)
+      console.log(`assertion2: ${getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0}`)
+      if ((getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) || (getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0)) {
+         e.stopPropagation();
+         if (getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) {
+            let beforePressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1]));
+            let pressedKeyMapped = getKeysByValue(fretting_keys, e.key.toLowerCase());
+            console.log(`ll's: ${pressedKeyMapped.length}, ${beforePressedKeyMapped}`)
+            for (let i = 0; i < pressedKeyMapped.length; i++) {
+               for (let j = 0; j < beforePressedKeyMapped.length; j++) {
+                  let stringsOuter = document.getElementById('strings');
+                  console.log(beforePressedKeyMapped[j][0])
+                  console.log(strings.indexOf(beforePressedKeyMapped[j][0]));
+                  let string = stringsOuter.querySelector(`#string-${Number(strings.indexOf(beforePressedKeyMapped[j][0]))+1}`).parentElement;
+                  console.log(pressedKeyMapped[i])
+                  console.log(string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])])
+                  console.log(pressedKeyMapped)
+                  string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])].dispatchEvent(new Event('click'))
+               }
+            }
+         } else if (getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0) {
+            let beforePressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1]));
+            let pressedKeyMapped = getKeysByValue(strings, e.key.toLowerCase());
+            console.log(`ll's: ${pressedKeyMapped.length}, ${beforePressedKeyMapped}`)
+            for (let i = 0; i < pressedKeyMapped.length; i++) {
+               for (let j = 0; j < beforePressedKeyMapped.length; j++) {
+                  let stringsOuter = document.getElementById('strings');
+                  console.log(beforePressedKeyMapped[j][0])
+                  console.log(strings.indexOf(beforePressedKeyMapped[j][0]));
+                  console.log(pressedKeyMapped[i]);
+                  console.log(strings)
+                  console.log(Number(pressedKeyMapped[i])+1);
+                  console.log(pressedKeyMapped)
+                  let string = stringsOuter.querySelector(`#string-${Number(pressedKeyMapped[i])+1}`).parentElement;
+                  console.log(pressedKeyMapped[i])
+                  console.log(string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])])
+                  console.log(Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0])))
+                  string.children[string.children.length-1].querySelectorAll('rect')[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))].dispatchEvent(new Event('click'))
+               }
+            }
+         }
+      } else if (getKeysByValue(strings, e.key.toLowerCase()).length > 0) {
       //pathname.match(/\w+(\/\w+)[/]?$/)[1]
       e.stopPropagation(); 
       //const notes = JSON.parse(localStorage.getItem('notes')) || function(){localStorage.setItem('notes', JSON.stringify(["C","D","C#","E","D#","F","G","F#","A","G#","B","A#"]));return ["C","D","C#","E","D#","F","G","F#","A","G#","B","A#"]}();
@@ -401,6 +465,7 @@ useEffect(()=>{
 }
 
 window.onkeyup = (e)=>{
+   map[e.key.toLowerCase()] = e.type == 'keydown';
    let strings = JSON.parse(localStorage.getItem('strings')) || function(){localStorage.setItem('strings', JSON.stringify(["1","2","3","4","5","6"]));return ["1","2","3","4","5","6"]}();
    // console.log('ock: ',octavechangekeys)
    // console.log(getKeysByValue(octavechangekeys, e.key.toLowerCase()))
@@ -1702,8 +1767,11 @@ useEffect(()=> () => {
             <rect width={(2**(1/12))**1*75} height="1650" x={500-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-1' data-tune={guitarTuning[0]} data-currentTune={pitchBinding[0]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(179.9) translate(-500, -5500) scale(-1,1)'>
                {/* needs to be fixed by simply adding sub zero index to last_index array */}
-               <g className='circle' style={{display: pitchBinding[0] == guitarTuning[0] ? 'block' : 'none'}}><circle r="40" cx={-((2**(1/12))**0*30/2)/6} cy={-320+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))-320)/2} fill='darkblue' id={guitarTuning[0]}/><text textAnchor="middle" x={((2**(1/12))**0*30/2)/6} y={-320+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))-320)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{guitarTuning[0]}</text></g>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={0} fill='transparent' fillOpacity="0" note={guitarTuning[0]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];console.log(t_pitchBinding);t_pitchBinding[0] = guitarTuning[0];setPitchBinding(t_pitchBinding)}}/>
+               { /*
+               t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" x={-fret_heigh_increment/6} y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={i} fill='transparent' fillOpacity="0" note={pitch_note} onClick={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding); console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[i].style.display = 'block'; e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; last_index[j] = i; console.log(e.target.parentElement.querySelectorAll('.circle')[i].style)}}/>]; 
+               */}
+               {/* <g className='circle' style={{display: pitchBinding[0] == guitarTuning[0] ? 'block' : 'none'}}><circle r="40" cx={-((2**(1/12))**0*30/2)/6} cy={-320+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))-320)/2} fill='darkblue' id={guitarTuning[0]}/><text textAnchor="middle" x={((2**(1/12))**0*30/2)/6} y={-320+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))-320)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{guitarTuning[0]}</text></g>
+               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={0} fill='transparent' fillOpacity="0" note={guitarTuning[0]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];console.log(t_pitchBinding);e.target.parentElement.querySelectorAll('.circle')[last_index[0]].style.display = 'none';t_pitchBinding[0] = guitarTuning[0]; setPitchBinding(t_pitchBinding); console.log(last_index[0]); last_index[0] = 0;}}/> */}
                { stringsTriggers[0] }
             </g>
          </g>
@@ -1711,7 +1779,7 @@ useEffect(()=> () => {
             <rect width="17.5" height="6550" x="400" fill='#b8b8b8'/>
             <rect width={(2**(1/12))**1*75} height="1650" x={400-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-2' data-tune={guitarTuning[1]} data-currentTune={pitchBinding[1]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-400, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={1} fill='transparent' fillOpacity="0" note={guitarTuning[1]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[1] = guitarTuning[1];setPitchBinding(t_pitchBinding)}}/>
+               {/* <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={1} fill='transparent' fillOpacity="0" note={guitarTuning[1]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[1] = guitarTuning[1];setPitchBinding(t_pitchBinding)}}/> */}
                { stringsTriggers[1] }
             </g>
          </g>
@@ -1719,7 +1787,7 @@ useEffect(()=> () => {
             <rect width="22.5" height="6400" x="300" fill='#b8b8b8'/>
             <rect width={(2**(1/12))**1*75} height="1650" x={300-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-3' data-tune={guitarTuning[2]} data-currentTune={pitchBinding[2]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-300, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={2} fill='transparent' fillOpacity="0" note={guitarTuning[2]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[2] = guitarTuning[2];setPitchBinding(t_pitchBinding)}}/>
+               {/* <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={2} fill='transparent' fillOpacity="0" note={guitarTuning[2]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[2] = guitarTuning[2];setPitchBinding(t_pitchBinding)}}/> */}
                { stringsTriggers[2] }
             </g>
          </g>
@@ -1727,7 +1795,7 @@ useEffect(()=> () => {
             <rect width="20" height="6200" x="200" fill='#b8b8b8'/>
             <rect width={(2**(1/12))**1*75} height="1650" x={200-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-4' data-tune={guitarTuning[3]} data-currentTune={pitchBinding[3]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-200, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={3}  fill='transparent' fillOpacity="0" note={guitarTuning[3]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[3] = guitarTuning[3];setPitchBinding(t_pitchBinding)}}/>
+               {/* <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={3}  fill='transparent' fillOpacity="0" note={guitarTuning[3]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[3] = guitarTuning[3];setPitchBinding(t_pitchBinding)}}/> */}
                { stringsTriggers[3] }
             </g>
          </g>
@@ -1735,7 +1803,7 @@ useEffect(()=> () => {
             <rect width="25" height="6000" x="100" fill='#b8b8b8'/>
             <rect width={(2**(1/12))**1*75} height="1650" x={100-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-5' data-tune={guitarTuning[4]} data-currentTune={pitchBinding[4]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-100, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={4} fill='transparent' fillOpacity="0" note={guitarTuning[4]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[4] = guitarTuning[4];setPitchBinding(t_pitchBinding)}}/>
+               {/* <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={4} fill='transparent' fillOpacity="0" note={guitarTuning[4]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[4] = guitarTuning[4];setPitchBinding(t_pitchBinding)}}/> */}
                { stringsTriggers[4] }
             </g>
          </g>
@@ -1743,7 +1811,7 @@ useEffect(()=> () => {
             <rect width="27.5" height="5800" x="0" fill='#b8b8b8'/>
             <rect width={(2**(1/12))**1*75} height="1650" x={0-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-6' data-tune={guitarTuning[5]} data-currentTune={pitchBinding[5]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(0, -5500) scale(-1,1)'>
-               <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={5} fill='transparent' fillOpacity="0" note={guitarTuning[5]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[5] = guitarTuning[5];setPitchBinding(t_pitchBinding)}}/>
+               {/* <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={5} fill='transparent' fillOpacity="0" note={guitarTuning[5]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[5] = guitarTuning[5];setPitchBinding(t_pitchBinding)}}/> */}
                { stringsTriggers[5] }
             </g>
          </g>
