@@ -12,6 +12,8 @@ import { getKeysByValue } from './libs/essentials.js';
 //const meter = new Tone.Meter();
 //let mic = new Tone.UserMedia().connect(meter).toDestination();
 
+var map = {};
+
 export default function Home(props) {
 const [mic, setMic] = useState();
 
@@ -45,13 +47,15 @@ const [fretsTriggers, setFretsTriggers] = useState([]);
 
 const [stringsTriggers, setStringsTriggers] = useState([]);
 
+const [guitar, setGuitar] = useState();
 const [guitarTuning, setGuitarTuning] = useState(['E4','B3','G3','D3','A2','E2']);
 const [pitchBinding, setPitchBinding] = useState([...guitarTuning]);
 
 useEffect(()=>{
   setMic(new Tone.UserMedia().toDestination());
+  setGuitar(new Tone.Sampler({urls: {"C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3",}, release: 1, baseUrl: "./samples/guitar-electric/"}).toDestination());
   setDistortion(new Tone.Distortion(10).toDestination())
-  setGain(new Tone.Gain(250).toDestination())   
+  setGain(new Tone.Gain(250).toDestination())
   setBitcrusher(new Tone.BitCrusher(8).toDestination())
   setChorus(new Tone.Chorus(4,2.5,1).toDestination().start())
   setDelay(new Tone.FeedbackDelay("8n", .8).toDestination())
@@ -92,6 +96,8 @@ function allowMicContext() {
 //todo: simplify functions by reducing code amount - yes
 //reverb is too heavy
 //todo: add multiple range inputs to change effects, check if effects are sequenced
+//split guitar and mic effects
+//flageolets and other guitar techiques
 
 //MEMORY LEAKS! Need fix ASAP, encountering them when allowing mic context but its not because of it - fixed
 function toggleEffect(value, effect) {
@@ -104,6 +110,7 @@ if (value) {
   //mic.connect(meter).connect(vargain).connect(vol).toDestination();
   // console.log(gain.gain)
   mic.connect(effect).toDestination();
+  guitar.connect(effect).toDestination();
   // let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
   // console.log(mapped)
   //console.log(effects[1][1]);
@@ -122,6 +129,7 @@ if (value) {
   mapped = mapped.filter((e)=>e!=effect)
   console.log(mapped)
   mic.disconnect().chain(...[...mapped]).toDestination();
+  guitar.disconnect().chain(...[...mapped]).toDestination();
   //mic.disconnect(vargain).disconnect(vol).toDestination();
   //mic.close()
   //mic = new Tone.UserMedia().toDestination();
@@ -129,15 +137,16 @@ if (value) {
 }
 
 function changeEffectVal(newVal,oldVal) {
-mic.open()
-Tone.start()
-let newEffectVal = newVal.toDestination();
-let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
-console.log(mapped)
-mapped = mapped.filter((e)=>e!=oldVal)
-console.log(mapped)
-//console.log('err')
-mic.disconnect().chain(...[...mapped, newEffectVal]).toDestination();
+   mic.open()
+   Tone.start()
+   let newEffectVal = newVal.toDestination();
+   let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+   console.log(mapped)
+   mapped = mapped.filter((e)=>e!=oldVal)
+   console.log(mapped)
+   //console.log('err')
+   mic.disconnect().chain(...[...mapped, newEffectVal]).toDestination();
+   guitar.disconnect().chain(...[...mapped, newEffectVal]).toDestination();
 }
 
 function addDistortion(value) {
@@ -287,17 +296,6 @@ function changeReverbValue(value) {
   changeEffectVal(new Tone.Reverb(Number(value)), reverb);
 }
 
-const guitar = new Tone.Sampler({
-   urls: {
-       "C4": "C4.mp3",
-       "D#4": "Ds4.mp3",
-       "F#4": "Fs4.mp3",
-       "A4": "A4.mp3",
-   },
-   release: 1,
-   baseUrl: "./samples/guitar-electric/",
-}).toDestination();
-
 const fret_width = 10;
 
 let distance_to_nut = 5480;
@@ -342,8 +340,7 @@ useEffect(()=>{
       let fret_heigh_increment = ((2**(1/12))**0*30/2)
       let fret_height = (2**(1/12))**1*30*2
       let pitch_note = guitarTuning[j];
-      t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))+distance_from_nut/8)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))+distance_from_nut/8)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={0} fill='transparent' fillOpacity="0" note={pitch_note} onClickCapture={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding); console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; e.target.parentElement.querySelectorAll('.circle')[0].style.display = 'block'; last_index[j] = 0; console.log(e.target.parentElement.querySelectorAll('.circle')[0].style)}}/>];
-      for (let i = 0; i < fretsAmount; i++) {
+      t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))+distance_from_nut/8)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))+distance_from_nut/8)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={0} fill='transparent' fillOpacity="0" note={pitch_note} onClickCapture={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding); console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; e.target.parentElement.querySelectorAll('.circle')[0].style.display = 'block'; last_index[j] = 0; console.log(e.target.parentElement.querySelectorAll('.circle')[0].style)}}/>];      for (let i = 0; i < fretsAmount; i++) {
          // console.log(i)
          let distance_from_nut = distance_to_nut*(1-1/((2**(1/12))**i));
          let fret_size = distance_to_nut*((1-1/((2**(1/12))**i))-(1-1/((2**(1/12))**(i-1))));
@@ -383,7 +380,6 @@ useEffect(()=>{
 //     map[e.keyCode] = e.type == 'keydown';
 //     /* insert conditional here */
 // }
-var map = {};
    window.onkeydown = (e)=>{
       map[e.key.toLowerCase()] = e.type == 'keydown';
       let strings = JSON.parse(localStorage.getItem('strings')) || function(){localStorage.setItem('strings', JSON.stringify(["1","2","3","4","5","6"]));return ["1","2","3","4","5","6"]}();
@@ -393,9 +389,14 @@ var map = {};
       // console.log(getKeysByValue(octavechangekeys, e.key.toLowerCase()).length > 0)
       console.log(getKeysByValue(strings, 'alt'.toLowerCase()))
       console.log(Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])))
+      console.log(map)
       console.log(`assertion: ${(getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0)}`)
       console.log(`assertion2: ${getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0}`)
-      if ((getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) || (getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0)) {
+      if (e.ctrlKey) {
+         e.preventDefault(); //disables all except t, w, n
+         console.log('ctrl + ',e.key.toLowerCase());
+      }
+      else if ((getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) || (getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0)) {
          e.stopPropagation();
          if (getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) {
             let beforePressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1]));
@@ -410,7 +411,11 @@ var map = {};
                   console.log(pressedKeyMapped[i])
                   console.log(string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])])
                   console.log(pressedKeyMapped)
+                  console.log('str',pressedKeyMapped[i])
+                  console.log('frt',beforePressedKeyMapped[j])
+                  guitar.triggerRelease(pitchBinding[Number(beforePressedKeyMapped[j][0])-1]);
                   string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])].dispatchEvent(new Event('click'))
+                  guitar.triggerAttack(string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])].getAttribute('note'))
                }
             }
          } else if (getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0) {
@@ -430,6 +435,8 @@ var map = {};
                   console.log(pressedKeyMapped[i])
                   console.log(string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])])
                   console.log(Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0])))
+                  console.log("str1",pitchBinding[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))])
+                  guitar.triggerRelease(pitchBinding[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))]);
                   string.children[string.children.length-1].querySelectorAll('rect')[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))].dispatchEvent(new Event('click'))
                }
             }

@@ -11,6 +11,7 @@ export default function Settings() {
 const [increaseOctaveKey, setIncreaseOctaveKey] = useState('');
 const [decreaseOctaveKey, setDecreaseOctaveKey] = useState('');
 const [stringsAmount, setStringsAmount] = useState(6);
+const [frettingKeysAmount, setFrettingKeysAmount] = useState(21+1);
 
 useEffect(()=>{
 setIncreaseOctaveKey(localStorage.getItem('octavechangekeys') ? JSON.parse(localStorage.getItem('octavechangekeys'))[0] : '')
@@ -75,6 +76,19 @@ for (let i = 0; i < stringsAmount; i++) {
 
 },[])
 
+function setRangeValue(val, minVal, maxVal, setter) {
+  val = Number(val)
+  if (val && typeof val == 'number' && val >= minVal && val <= maxVal) {
+    setter(val)
+  } else {
+    alert(`Wrong value '${val}'! Correct it and check it again.`)
+  }
+}
+
+function setSettingsRange(val, minVal, maxVal, stateSetter, storageSetterName) {
+  setRangeValue(val,minVal,maxVal,()=>{stateSetter(val), localStorage.setItem(storageSetterName, JSON.stringify([val, localStorage.getItem(storageSetterName)]))});
+}
+
 function increaseOctave(e) {
   console.log(localStorage)
   console.log([e.target.value, localStorage.getItem('octavechangekeys') ? JSON.parse(localStorage.getItem('octavechangekeys'))[1] : null])
@@ -88,15 +102,48 @@ function decreaseOctave(e) {
 }
 
 function stringsChange(e) {
-  setStringsAmount(e.target.value)
-  localStorage.setItem('stringsAmount', JSON.stringify(e.target.value))
+  setSettingsRange(e.target.value,1,12,setStringsAmount,'stringsAmount');
+}
+
+function fretsChange(e) {
+  setSettingsRange(e.target.value,1,36,setFretsAmount,'fretsAmount');
 }
 
 useEffect(()=>{
   if (localStorage || !localStorage.getItem('stringsAmount')) {
      localStorage.setItem('stringsAmount', JSON.stringify(6))
   }
-  setStringsAmount(localStorage.getItem('stringsItem'))
+  setStringsAmount(localStorage.getItem('stringsAmount'))
+  if (localStorage || !localStorage.getItem('frettingKeysAmount')) {
+    localStorage.setItem('frettingKeysAmount', JSON.stringify(21+1))
+  }
+  setFrettingKeysAmount(localStorage.getItem('frettingKeysAmount'));
+
+  // frets-mapping-section
+  let fretsMappingSection = document.getElementById('frets-mapping-section');
+  fretsMappingSection.innerHTML = '';
+  let fretting_keys = JSON.parse(localStorage.getItem('frettingKeys')) || function(){localStorage.setItem('frettingKeys', JSON.stringify(["q","w","e","r","t","y","u","i","o","p","[","]","a","s","d","f","g","h","j","k","l",";"]));return ["q","w","e","r","t","y","u","i","o","p","[","]","a","s","d","f","g","h","j","k","l",";"]}();
+  for (let i = 0; i < frettingKeysAmount; i++) {
+    let fretSelect = document.createElement('input');
+    fretSelect.type = 'text';
+    fretSelect.maxlength = '1';
+    fretSelect.value = fretting_keys[i] ? fretting_keys[i] : '';
+    fretSelect.name = `fret${i}`;
+    fretSelect.id = `fret${i}`;
+    fretSelect.onchange = (e) => {
+    let allFrets = JSON.parse(localStorage.getItem('frettingKeys'));
+    allFrets[i] = fretSelect.value;
+    localStorage.setItem('frettingKeys', JSON.stringify(allFrets));
+    };
+    let label = document.createElement('label');
+    label.textContent = `Fret ${i}:`;
+    label.htmlFor = `fret${i}`;
+    let outer = document.createElement('div');
+    outer.classList.add('m-2')
+    outer.appendChild(label);
+    outer.appendChild(fretSelect);
+    fretsMappingSection.appendChild(outer);
+  }
 },[])
 
 
@@ -113,19 +160,23 @@ useEffect(()=>{
       <div id="controls-mapping-section">
         <div className='m-1'>
           <label htmlFor='octave+'>Increase octave: </label>
-          <input id="octave+" type='text' value={increaseOctaveKey} onInput={(e)=>{increaseOctave(e)}}/>
+          <input id="octave+" type='text' value={increaseOctaveKey} onChange={(e)=>{increaseOctave(e)}}/>
         </div>
         <div className='m-1'>
           <label htmlFor='octave-'>Decrease octave: </label>
-          <input id="octave-" type='text' value={decreaseOctaveKey} onInput={(e)=>{decreaseOctave(e)}}/>
+          <input id="octave-" type='text' value={decreaseOctaveKey} onChange={(e)=>{decreaseOctave(e)}}/>
         </div>
       </div>
       <h3>Guitar</h3>
+      <div className='m-1'>
+        <label htmlFor='strings'>Strings amount: </label>
+        <input id="strings" type='number' value={stringsAmount} onChange={(e)=>{stringsChange(e)}}/>
+      </div>
       <div id="strings-mapping-section"></div>
-        <div className='m-1'>
-          <label htmlFor='strings'>Strings amount: </label>
-          <input id="strings" type='number' value={decreaseOctaveKey} onInput={(e)=>{stringsChange(e)}}/>
-        </div>
+      <div className='m-1'>
+        <label htmlFor='frets'>Frets amount: </label>
+        <input id="frets" type='number' value={frettingKeysAmount} onChange={(e)=>{fretsChange(e)}}/>
+      </div>
       <div id="frets-mapping-section"></div>
     </main>
   )
