@@ -3,7 +3,7 @@ import Image from 'next/image'
 import styles from './page.module.css'
 import * as Tone from 'tone'
 import "./libs/tonejs-instruments-master/Tonejs-Instruments.js"
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
 import EffectToggle from "./components/EffectToggle.js";
 import EffectValue from "./components/EffectValue.js";
@@ -15,11 +15,17 @@ import { getKeysByValue } from './libs/essentials.js';
 var map = {};
 
 export default function Home(props) {
+let pb_changed = false;
+
 const [mic, setMic] = useState();
 
-const [distortion, setDistortion] = useState()
+const [testvar, setTestvar] = useState("a");
+
+const [volume, setVolume] = useState();
+const [isVolume, setIsVolume] = useState(false);
+const [distortion, setDistortion] = useState();
 //let [distortion, setDistortion] = [new Tone.Distortion(0.3), (v)=>{distortion=v}];
-const [isDistortion, setIsDistortion] = useState(false)
+const [isDistortion, setIsDistortion] = useState(false);
 //let [isDistortion, setIsDistortion] = [false, (v)=>{isDistortion=v}]
 //const feedbackDelay = new Tone.FeedbackDelay("8n", 0.5).toDestination();
 //const tom = new Tone.UserMedia().connect(feedbackDelay);
@@ -38,7 +44,7 @@ const [delay, setDelay] = useState()
 const [isDelay, setIsDelay] = useState(false)
 const [reverb, setReverb] = useState() //memory leaks because of this value
 const [isReverb, setIsReverb] = useState(false)
-const effects = [[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb]];
+const effects = [[volume,isVolume],[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb]];
 
 const [stringsAmount, setStringsAmount] = useState(6);
 const [fretsAmount, setFretsAmount] = useState(21);
@@ -54,6 +60,7 @@ const [pitchBinding, setPitchBinding] = useState([...guitarTuning]);
 useEffect(()=>{
   setMic(new Tone.UserMedia().toDestination());
   setGuitar(new Tone.Sampler({urls: {"C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3",}, release: 1, baseUrl: "./samples/guitar-electric/"}).toDestination());
+  setVolume(new Tone.Volume(10).toDestination());
   setDistortion(new Tone.Distortion(10).toDestination())
   setGain(new Tone.Gain(250).toDestination())
   setBitcrusher(new Tone.BitCrusher(8).toDestination())
@@ -61,6 +68,12 @@ useEffect(()=>{
   setDelay(new Tone.FeedbackDelay("8n", .8).toDestination())
   setReverb(new Tone.Reverb(30).toDestination())
 },[]);
+
+useEffect(()=>{
+   if (mic) {
+      mic.output = new Tone.Mono().toDestination();
+   }
+},[mic])
 
 useEffect(()=>{
   if (typeof bitcrusher == Tone.BitCrusher) {
@@ -109,7 +122,7 @@ if (value) {
   //mic.connect(gain).toDestination();
   //mic.connect(meter).connect(vargain).connect(vol).toDestination();
   // console.log(gain.gain)
-  mic.connect(effect).toDestination();
+  new Tone.Mono(mic.connect(effect).toDestination()).toDestination();
   guitar.connect(effect).toDestination();
   // let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
   // console.log(mapped)
@@ -147,6 +160,17 @@ function changeEffectVal(newVal,oldVal) {
    //console.log('err')
    mic.disconnect().chain(...[...mapped, newEffectVal]).toDestination();
    guitar.disconnect().chain(...[...mapped, newEffectVal]).toDestination();
+}
+
+function addVolume(value) {
+   setIsVolume(value);
+   toggleEffect(value, volume);
+}
+
+function changeVolumeValue(value) {
+   // console.log(`changed to ${value}!`)
+   setVolume(new Tone.Volume(Math.round(value)).toDestination());
+   changeEffectVal(new Tone.Volume(Math.round(value)), volume);
 }
 
 function addDistortion(value) {
@@ -340,14 +364,15 @@ useEffect(()=>{
       let fret_heigh_increment = ((2**(1/12))**0*30/2)
       let fret_height = (2**(1/12))**1*30*2
       let pitch_note = guitarTuning[j];
-      t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))+distance_from_nut/8)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))+distance_from_nut/8)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={0} fill='transparent' fillOpacity="0" note={pitch_note} onClickCapture={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding); console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; e.target.parentElement.querySelectorAll('.circle')[0].style.display = 'block'; last_index[j] = 0; console.log(e.target.parentElement.querySelectorAll('.circle')[0].style)}}/>];      for (let i = 0; i < fretsAmount; i++) {
+      t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))+distance_from_nut/8)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(0+1)))+distance_from_nut/8)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={0} fill='transparent' fillOpacity="0" note={pitch_note} onClickCapture={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; pb_changed=false; setPitchBinding(pb => {let t = [...pb];t[j]=pitch_note;return t}); pb_changed = false; console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; e.target.parentElement.querySelectorAll('.circle')[0].style.display = 'block'; last_index[j] = 0; console.log(e.target.parentElement.querySelectorAll('.circle')[0].style)}}/>];      
+      for (let i = 0; i < fretsAmount; i++) {
          // console.log(i)
          let distance_from_nut = distance_to_nut*(1-1/((2**(1/12))**i));
          let fret_size = distance_to_nut*((1-1/((2**(1/12))**i))-(1-1/((2**(1/12))**(i-1))));
          let fret_heigh_increment = (2**(1/12))**i*30
          let fret_height = (2**(1/12))**1*30*2
          let pitch_note = intToNote(noteToInt(guitarTuning[j])+i+1);
-         t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={i+1} fill='transparent' fillOpacity="0" note={pitch_note} onClickCapture={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding); console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; e.target.parentElement.querySelectorAll('.circle')[i+1].style.display = 'block'; last_index[j] = i+1; console.log(e.target.parentElement.querySelectorAll('.circle')[i+1].style)}}/>]; 
+         t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={i+1} fill='transparent' fillOpacity="0" note={pitch_note} onClickCapture={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log("t_pitchBinding before: ",t_pitchBinding); t_pitchBinding[j] = pitch_note; console.log("t_pitchBinding after: ",t_pitchBinding); pb_changed=false; setPitchBinding(pb => {let t = [...pb];t[j]=pitch_note;return t}); pb_changed = false; console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; e.target.parentElement.querySelectorAll('.circle')[i+1].style.display = 'block'; last_index[j] = i+1; console.log(e.target.parentElement.querySelectorAll('.circle')[i+1].style)}}/>]; 
       }
       t_strings.push(t_frets_triggers)
       t_frets_triggers = []
@@ -372,7 +397,9 @@ useEffect(()=>{
 },[])
 
 useEffect(()=>{
-   console.log(pitchBinding)
+   console.log("pb_changed");
+   console.log(pitchBinding);
+   pb_changed=true;
 },[pitchBinding])
 // var map = {}; // You could also use an array
 // onkeydown = onkeyup = function(e){
@@ -399,9 +426,11 @@ console.log(stringsAmount)
          e.preventDefault(); //disables all except t, w, n
          console.log('shift + ',e.key.toLowerCase());
          if (getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0) {
+            let stringsOuter = document.getElementById('strings');
             console.log(123123);
             let pressedKeyMapped = getKeysByValue(fretting_keys, e.key.toLowerCase());
-            let node_key = Math.min(...pitchBinding.map((e)=>noteToInt(e)-noteToInt(guitarTuning[pitchBinding.indexOf(e)])).filter((e)=>e!=0)); //if ctrl is not pressed, if it's pressed all the eys must move
+            let node_key = Math.min(...stringsOuter.getAttribute("pitchbinding").split(',').map((e)=>noteToInt(e)-noteToInt(guitarTuning[stringsOuter.getAttribute("pitchbinding").split(',').indexOf(e)])).filter((e)=>e!=0)); //if ctrl is not pressed, if it's pressed all the eys must move
+            console.log("nk ",node_key);
             let delta_node_key = node_key - Number(pressedKeyMapped[0]);
             for (let i = 0; i < pressedKeyMapped.length; i++) {
                console.log(321);
@@ -422,14 +451,28 @@ console.log(stringsAmount)
                console.log(document.getElementById('strings').getAttribute('stringsamount'));
                for (let j = 0; j < Number(document.getElementById('strings').getAttribute('stringsamount')); j++) {
                   console.log('j',j)
-                  let stringsOuter = document.getElementById('strings');
                   let string = stringsOuter.querySelector(`#string-${j+1}`).parentElement;
-                  if (pitchBinding[j] == guitarTuning[j]) {
+                  // if (noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]) - delta_node_key == 0) {
+                  //    break;
+                  // }
+                  if (stringsOuter.getAttribute("pitchbinding").split(',')[j] == guitarTuning[j]) {
                      continue;
                   }
-                  console.log('dnk',delta_node_key)
+                  // startedCycle = true;
+                  console.log('dnk ',delta_node_key);
+                  //bug lays in here somewhere
+                  //one of the keys stays on its position (highest key by order)
+                  console.log("note(current): ",stringsOuter.getAttribute("pitchbinding").split(',')[j],", int: ",noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]));
+                  console.log("tuning: ",guitarTuning[j],", int: ",noteToInt(guitarTuning[j]))
+                  console.log("note shift",noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]));
+                  console.log("shift amount ", noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]) - delta_node_key);
                   // string.children[string.children.length-1].querySelectorAll('rect')[noteToInt(pitchBinding[j]) - noteToInt(guitarTuning[j]) + Number(pressedKeyMapped[i]) > fretsAmount ? fretsAmount : noteToInt(pitchBinding[j]) - noteToInt(guitarTuning[j]) + Number(pressedKeyMapped[i])].dispatchEvent(new Event('click'));
-                  string.children[string.children.length-1].querySelectorAll('rect')[noteToInt(pitchBinding[j]) - noteToInt(guitarTuning[j]) - delta_node_key].dispatchEvent(new Event('click'));
+                  //this thing changes only upper string in pitchbinding for some reason (probably cause last step of this cycle, as other steps, uses pitchbinding from state or smth)
+                  string.children[string.children.length-1].querySelectorAll('rect')[noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]) - delta_node_key].dispatchEvent(new Event('click'));
+                  // while (!pb_changed) {
+                  //    console.log("wait")
+                  // }
+                  // pb_changed=false;
                }
             }
          } else if (getKeysByValue(strings, e.key.toLowerCase()).length > 0) {
@@ -517,7 +560,6 @@ console.log(stringsAmount)
       }
       }
 }
-
 window.onkeyup = (e)=>{
    map[e.key.toLowerCase()] = e.type == 'keydown';
    let strings = JSON.parse(localStorage.getItem('strings')) || function(){localStorage.setItem('strings', JSON.stringify(["1","2","3","4","5","6"]));return ["1","2","3","4","5","6"]}();
@@ -577,6 +619,7 @@ useEffect(()=>{console.log()},[])
     <main className={styles.main}>
       <div className={[styles.description, 'center-block text-center m-2']} style={{lineHeight: '3rem', zIndex:1}}>
         <span>Simple guitar amp based on <h5><a href="https://tonejs.github.io/" target='blank'>tone js</a></h5></span>
+        <span onClickCapture={()=>{setTestvar("b");console.log("change")}}>{testvar}</span>
       </div>
       {/* transform: translateY(300px) rotate(315deg) !important; */}
       {/* only add triggers, not whole surface, but you should make strings move */}
@@ -2348,6 +2391,10 @@ useEffect(()=>{console.log()},[])
       <button id='mic' onClickCapture={allowMicContext} style={{zIndex:1}}>Allow mic context</button>
       <div className="center-block container">
         <h2 className='text-center my-3' style={{zIndex:1}}>Effects:</h2>
+        <div className="row effect">
+          <EffectToggle label="Volume" id="volume" checked={false} change={addVolume} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
+          <EffectValue label="VolumeValue" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={0} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
+        </div>
         <div className="row effect">
           <EffectToggle label="Distortion" id="distortion" checked={false} change={addDistortion} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
           <EffectValue label="DistortionValue" id="distortionvalue" defaultValue={10} change={changeDistortionValue} min={0} max={10000} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
