@@ -1,0 +1,30 @@
+.map-mask-wrap {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .map-mask-wrap img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .map-mask-wrap div {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .popup-item {
+    font-size: calc(1em * 0.875);
+    padding: 0.5rem;
+    width: 15vw;
+    max-height: 15vh;
+    overflow: auto;
+    border: 3px solid black;
+    top: 0.9vh !important;
+    left: -10px !important;
+    background: #FAF9F6;
+    color: black;
+    font-weight: 500;
+  }

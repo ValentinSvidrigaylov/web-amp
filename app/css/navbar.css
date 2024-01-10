@@ -8,6 +8,7 @@
     flex-direction: row !important;
     justify-content: space-around !important;
     align-items: center !important;
+    background-color: #242424;
 }
 
 .navbar .active {

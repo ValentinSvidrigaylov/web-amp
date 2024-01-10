@@ -10,7 +10,8 @@ export default function Navbar() {
             <div className="navbar">
                 <Link href='/' className={pathname == '/' ? 'active' : ''}>Web amp</Link>
                 <Link href="/synth" className={pathname == '/synth' ? 'active' : ''}>Synth</Link>
-                <Link href="/settings" className={pathname == '/settings' ? 'active' : ''}>To settings</Link>
+                <Link href="/settings" className={pathname == '/settings' ? 'active' : ''}>Settings</Link>
+                <Link href="/history" className={pathname == '/history' ? 'active' : ''}>History</Link>
             </div>
             <hr/>
         </nav>

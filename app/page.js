@@ -21,6 +21,8 @@ const [mic, setMic] = useState();
 
 const [testvar, setTestvar] = useState("a");
 
+const [SF, setSF] = useState();
+const [isSF, setIsSF] = useState(false);
 const [volume, setVolume] = useState();
 const [isVolume, setIsVolume] = useState(false);
 const [distortion, setDistortion] = useState();
@@ -455,7 +457,7 @@ console.log(stringsAmount)
                   // if (noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]) - delta_node_key == 0) {
                   //    break;
                   // }
-                  if (stringsOuter.getAttribute("pitchbinding").split(',')[j] == guitarTuning[j]) {
+                  if (stringsOuter.getAttribute("pitchbinding").split(',')[j] == guitarTuning[j] && !isSF) {
                      continue;
                   }
                   // startedCycle = true;
@@ -603,6 +605,10 @@ useEffect(()=> () => {
 
 useEffect(()=>{console.log()},[])
 
+function addSF(value) {
+   setIsSF(value);
+}
+
 // let allowMicContext=()=>{};
 // let addDistortion=()=>{};
 // let changeDistortionValue=()=>{};
@@ -621,6 +627,9 @@ useEffect(()=>{console.log()},[])
         <span>Simple guitar amp based on <h5><a href="https://tonejs.github.io/" target='blank'>tone js</a></h5></span>
         <span onClickCapture={()=>{setTestvar("b");console.log("change")}}>{testvar}</span>
       </div>
+      <EffectToggle style={{zIndex: 1}} label="Strict fretting" id="SF" checked={false} change={addSF} trueBypass={isSF} setTrueBypass={setIsSF}/>
+      {/* <EffectToggle label="Volume" id="volume" checked={false} change={addVolume} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
+      <EffectValue label="VolumeValue" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={0} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/> */}
       {/* transform: translateY(300px) rotate(315deg) !important; */}
       {/* only add triggers, not whole surface, but you should make strings move */}
       <svg width="1000" height="900" transform='rotate(45)' style={{marginTop: "-15vh", marginBottom: "-15vh"}}><defs
