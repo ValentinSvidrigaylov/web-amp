@@ -415,7 +415,7 @@ useEffect(()=>{
 // }
 console.log(stringsAmount)
    window.onkeydown = (e)=>{
-      e.preventDefault()
+      // e.preventDefault()
       console.log(e)
       map[e.key.toLowerCase()] = e.type == 'keydown';
       let strings = JSON.parse(localStorage.getItem('strings')) || function(){localStorage.setItem('strings', JSON.stringify(["1","2","3","4","5","6"]));return ["1","2","3","4","5","6"]}();
@@ -428,7 +428,22 @@ console.log(stringsAmount)
       console.log(map)
       console.log(`assertion: ${(getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0)}`)
       console.log(`assertion2: ${getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0}`)
-      if (e.altKey) {
+      if (Object.values(JSON.parse(localStorage.getItem("Chords"))).map(e=>e.key).includes(e.key.toLowerCase())) {
+         // console.log(Object.values(JSON.parse(localStorage.getItem("Chords"))).map(e=>[Object.getOwnPropertyNames(e), e.key.toLowerCase]).filter)
+         console.log(Object.keys(JSON.parse(localStorage.getItem("Chords"))).map(e=>[e,JSON.parse(localStorage.getItem("Chords"))[e].key]))
+         console.log(e.key.toLowerCase())
+         console.log(JSON.parse(localStorage.getItem("Chords"))[Object.keys(JSON.parse(localStorage.getItem("Chords"))).map(e=>[e,JSON.parse(localStorage.getItem("Chords"))[e].key]).filter(el=>el[1]==e.key.toLowerCase())[0][0]].shape);
+         setChordShape(JSON.parse(localStorage.getItem("Chords"))[Object.keys(JSON.parse(localStorage.getItem("Chords"))).map(e=>[e,JSON.parse(localStorage.getItem("Chords"))[e].key]).filter(el=>el[1]==e.key.toLowerCase())[0][0]].shape)
+         // window.dispatchEvent(new Event("keydown", {type: 'keydown', key: '6'}))
+         // window.dispatchEvent(new Event("keydown", {type: 'keydown', key: 'tab'}))
+         let stringsOuter = document.getElementById('strings');
+         console.log(JSON.parse(stringsOuter.getAttribute("stringsamount"))-1)
+         // const event = new KeyboardEvent('keydown', { key: strings[JSON.parse(stringsOuter.getAttribute("stringsamount"))-1] });
+         // window.dispatchEvent(event);
+         // const event2 = new KeyboardEvent('keydown', { key: "tab" });
+         // window.dispatchEvent(event2);
+         // setChordShape(Object.values(JSON.parse(localStorage.getItem("Chords"))).map(e=>[Object.getOwnPropertyNames(e),e.shape]).filter(e=>e[0]==Object.getOwnPropertyNames(e))[1]);
+      } else if (e.altKey) {
          e.preventDefault(); //undefined behaviour
          console.log('alt + ',e.key.toLowerCase());
          if (getKeysByValue(strings, e.key.toLowerCase()).length > 0) {
@@ -484,7 +499,6 @@ console.log(stringsAmount)
          console.log("tab!!!!!!!")
          // if (Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) {
             e.stopPropagation(); 
-
             let pressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1]));
             console.log(strings);
             console.log(e.key.toLowerCase());
@@ -493,6 +507,7 @@ console.log(stringsAmount)
             let stringsOuter = document.getElementById('strings');
             for (let i = 0; i < pressedKeyMapped.length; i++) {
                for (let j = 0; j < Number(strings.indexOf(pressedKeyMapped[i][0]))+1; j++) {
+                  stringsOuter.querySelector(`#string-${j+1}`).dispatchEvent(new Event('mouseup'))
                   stringsOuter.querySelector(`#string-${j+1}`).dispatchEvent(new Event('mousedown'))
                   // console.log('key',Number(pressedKeyMapped)+1);
                   // for (let k = 0; k < Number(strings.indexOf(beforePressedKeyMapped[j][0]))+1; k++) {
@@ -862,6 +877,21 @@ window.onkeyup = (e)=>{
    }
 }
 
+useEffect(()=>{
+   if (window) {
+      let outer = document.getElementById("Chords");
+      let chords = JSON.parse(localStorage.getItem("Chords"))
+      outer.innerHTML=''
+      for (let e in chords) {
+         let el = document.createElement("div");
+         el.onclick = () => {setChordShape(chords[e].shape)};
+         el.style.border = "3px solid black";
+         el.textContent = e
+         outer.appendChild(el)
+      }
+   }
+},[])
+
 useEffect(()=> () => {
    window.onkeydown = null;
    window.onkeyup = null;
@@ -883,6 +913,16 @@ function setChordShape(shape) { //shape is an array of fret's indices
    }
 }
 
+function addChord(e) {
+   console.log(e)
+   console.log(e.target[0].value,e.target[1].value,e.target[2].value)
+   if (e.target[0].value && e.target[1].value) {
+      console.log(e.target[1].value)
+      let parsedValue = e.target[1].value.includes("[") && e.target[1].value.includes("]") ? e.target[1].value.replace("[","").replace("]","").includes(",") ? e.target[1].value.replace("[","").replace("]","").split(",").map(e=>Number(e)) : e.target[1].value.replace("[","").replace("]","").includes(", ") ? e.target[1].value.replace("[","").replace("]","").split(", ").map(e=>Number(e)) : null : e.target[1].value.includes(",") ? e.target[1].value.split(",").map(e=>Number(e)) : e.target[1].value.includes(", ") ? e.target[1].value.split(", ").map(e=>Number(e)) : null;
+      console.log(parsedValue)
+      parsedValue && localStorage.getItem("Chords") && JSON.parse(localStorage.getItem("Chords"))[e.target[0].value] ? (confirm(`Replace existing chord with this name? (${e.target[0].value})`) && localStorage.setItem("Chords", JSON.stringify({...JSON.parse(localStorage.getItem("Chords")), [e.target[0].value]: {key: e.target[2].value, shape: parsedValue}}))) : localStorage.setItem("Chords", JSON.stringify({...JSON.parse(localStorage.getItem("Chords")), [e.target[0].value]: {key: e.target[2].value.toLowerCase(), shape: parsedValue}}));
+   }
+}
 // let allowMicContext=()=>{};
 // let addDistortion=()=>{};
 // let changeDistortionValue=()=>{};
@@ -904,13 +944,40 @@ function setChordShape(shape) { //shape is an array of fret's indices
       <EffectToggle style={{zIndex: 1}} label="Strict fretting" id="SF" checked={false} change={addSF} trueBypass={isSF} setTrueBypass={setIsSF}/>
       <div style={{width: "5rem", height: "5rem", border: "3px solid black", background: "darkblue",zIndex: "10"}}>
          <div style={{display: "block", marginLeft: "auto", marginRight: "auto", textAlign: "center"}} onClickCapture={(e)=>{setChordShapesShown(!chordShapesShown)}}>Chord shapes
-            <div style={{display: chordShapesShown ? "block" : "none", overflow: "auto", width: "10rem", height: "10rem", background: "#999999", position: "relative", left: "50%", display: "grid", gridTemplateColumns: "1fr 1fr 1fr"}}>
-               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,0,2,3])}}>C Major</div>
-               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([2,3,2,0])}}>D Major</div>
-               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,1,2,3,3,1])}}>F Major</div>
-               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,3,3,3,1,1])}}>B Major</div>
-               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,0,1,2,2,0])}}>E Major</div>
-               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,2,2,2,0,0])}}>A Major</div>
+            <div> {/*  style={{display: chordShapesShown ? "block" : "none"}} */}
+               <div style={{overflow: "auto", width: "12rem", height: "12rem", background: "#999999", position: "relative", left: "50%", display: "grid", gridTemplateColumns: "1fr 1fr 1fr"}} id="DefaultChords">
+                  {/* default chords */}
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,0,2,3])}}>C</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([2,3,2,0])}}>D</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,1,2,3,3,1])}}>F</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,3,3,3,1,1])}}>B</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,0,1,2,2,0])}}>E</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,2,2,2,0,0])}}>A</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([3,3,0,0,2,3])}}>G</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,0,0,2,2,0])}}>Em</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,2,2,0,0])}}>Am</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,3,2,0])}}>Dm</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,2,3,3,1,1])}}>Bm</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,3,2,3])}}>C7</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,0,1,0])}}>A7</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,0,0,0,2,3])}}>G7</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,0,1,0,2,0])}}>E7</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,2,1,0])}}>D7</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([2,0,2,1,2])}}>B7</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,1,2,1,3,1])}}>F7</div>
+               </div>
+               <div style={{overflow: "auto", width: "12rem", background: "#999999", position: "relative", left: "50%", display: "grid", gridTemplateColumns: "1fr 1fr 1fr"}} id="Chords">
+                  {/* custom chords */}
+                  
+               </div>
+               <div style={{width: "12rem", overflow: "auto",background: "#999999", position: "relative",left: "50%", border: "3px solid black"}}>
+                  <form onSubmit={(e)=>{e.preventDefault();addChord(e);return false}}>
+                     <input type="text" placeholder='Enter chord name...'/>
+                     <input type="text" placeholder='Enter chord shape...'/>
+                     <input type="text" placeholder='Enter key name...'/>
+                     <input type="submit" value='Press to add chord'/>
+                  </form>
+               </div>
             </div>
          </div>
       </div>
