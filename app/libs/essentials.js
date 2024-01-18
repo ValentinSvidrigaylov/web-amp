@@ -1,5 +1,5 @@
 export function getKeysByValue(object, value) {
-    return Object.keys(object).filter(key => object[key] === value);
+    return Object.keys(object).filter(key => object[key] === value).map(e=>Number(e));
   }
 
 Number.prototype.fromExponent = function() {

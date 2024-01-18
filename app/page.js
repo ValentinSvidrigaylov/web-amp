@@ -22,6 +22,7 @@ const [mic, setMic] = useState();
 const [testvar, setTestvar] = useState("a");
 
 const [SF, setSF] = useState();
+const [chordShapesShown, setChordShapesShown] = useState(false);
 const [isSF, setIsSF] = useState(false);
 const [volume, setVolume] = useState();
 const [isVolume, setIsVolume] = useState(false);
@@ -58,6 +59,7 @@ const [stringsTriggers, setStringsTriggers] = useState([]);
 const [guitar, setGuitar] = useState();
 const [guitarTuning, setGuitarTuning] = useState(['E4','B3','G3','D3','A2','E2']);
 const [pitchBinding, setPitchBinding] = useState([...guitarTuning]);
+const [scaleLength, setScaleLength] = useState(647.7);
 
 useEffect(()=>{
   setMic(new Tone.UserMedia().toDestination());
@@ -114,7 +116,6 @@ function allowMicContext() {
 //split guitar and mic effects
 //flageolets and other guitar techiques
 
-//MEMORY LEAKS! Need fix ASAP, encountering them when allowing mic context but its not because of it - fixed
 function toggleEffect(value, effect) {
 mic.open()
 Tone.start()
@@ -327,6 +328,9 @@ const fret_width = 10;
 let distance_to_nut = 5480;
 let last_index = [];
 
+let strumming = false;
+let strumming_string;
+
 useEffect(()=>{
    console.log(stringsAmount)
    if (stringsAmount!=null) {
@@ -411,6 +415,7 @@ useEffect(()=>{
 // }
 console.log(stringsAmount)
    window.onkeydown = (e)=>{
+      e.preventDefault()
       console.log(e)
       map[e.key.toLowerCase()] = e.type == 'keydown';
       let strings = JSON.parse(localStorage.getItem('strings')) || function(){localStorage.setItem('strings', JSON.stringify(["1","2","3","4","5","6"]));return ["1","2","3","4","5","6"]}();
@@ -423,7 +428,97 @@ console.log(stringsAmount)
       console.log(map)
       console.log(`assertion: ${(getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0)}`)
       console.log(`assertion2: ${getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0}`)
-      if (e.shiftKey) { //shift for moving shape, alt for flageolets, ctrl for barre cuz it causes window to close
+      if (e.altKey) {
+         e.preventDefault(); //undefined behaviour
+         console.log('alt + ',e.key.toLowerCase());
+         if (getKeysByValue(strings, e.key.toLowerCase()).length > 0) {
+            let pressedKeyMapped = getKeysByValue(strings, e.key.toLowerCase());
+            for (let i = 0; i < pressedKeyMapped.length; i++) {
+            // for (let i = 0; i < getKeysByValue(strings, e.key.toLowerCase()).length; i++) {
+               let stringsOuter = document.getElementById('strings');
+               if (stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]==guitarTuning[pressedKeyMapped[i]]) {
+                  return; //since there is no fret on nut
+               } else if ((noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1)>=12) {
+                  // let frequency = Tone.Frequency(guitarTuning[pressedKeyMapped[i]]).toFrequency() / ((((distance_to_nut*(1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]]))))))) / distance_to_nut);
+                  let frequency = Tone.Frequency(guitarTuning[pressedKeyMapped[i]]).toFrequency() / ((((distance_to_nut*(1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))))) / distance_to_nut))
+                  console.log("length: ",((1-(distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength))
+                  console.log("half Length: ",(((1-(distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength)))
+                  // console.log("if: ",Tone.Frequency(guitarTuning[strings.indexOf(getKeysByValue(strings, e.key.toLowerCase())[i])+1]).toFrequency())
+                  console.log("curnote number: ",noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]))
+                  console.log("curnote: ",stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]])
+                  console.log("frequency: ",frequency);
+                  guitar.triggerAttack(frequency);
+               } else {
+                  let frequency = Tone.Frequency(guitarTuning[pressedKeyMapped[i]]).toFrequency() / ((distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))) / distance_to_nut));
+                  // console.log("length: ",(((distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength))
+                  console.log("length: ", ((distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))) / distance_to_nut)))
+                  // console.log("divison: ",((((distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength) / scaleLength))
+                  // console.log("half Length: ",(((1-(distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength)))
+                  // console.log("if: ",Tone.Frequency(guitarTuning[strings.indexOf(getKeysByValue(strings, e.key.toLowerCase())[i])+1]).toFrequency())
+                  console.log("curnote number: ",noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]))
+                  console.log("curnote: ",stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]])
+                  console.log("frequency: ",frequency);
+                  guitar.triggerAttack(frequency);
+               }
+               // let frequency = Tone.Frequency(guitarTuning[pressedKeyMapped[i]]).toFrequency() / (((1-(distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength) / scaleLength);
+               // console.log("length: ",((1-(distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength))
+               // console.log("half Length: ",(((1-(distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength)))
+               // console.log("if: ",Tone.Frequency(guitarTuning[strings.indexOf(getKeysByValue(strings, e.key.toLowerCase())[i])+1]).toFrequency())
+               // console.log("curnote number: ",noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]))
+               // console.log("curnote: ",stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]])
+               // console.log(strings)
+               // console.log(pressedKeyMapped[i])
+               // console.log(pressedKeyMapped)
+               // console.log(i)
+               // console.log(strings.indexOf(pressedKeyMapped[i]))
+               // console.log("cf: ",distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[strings.indexOf(getKeysByValue(strings, e.key.toLowerCase())[i])])-noteToInt(guitarTuning[strings.indexOf(getKeysByValue(strings, e.key.toLowerCase())[i])]))))) //*scaleLength
+               // console.log("sL: ",scaleLength)
+               // console.log("Length: ",distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[strings.indexOf(strings[i])]) - noteToInt(guitarTuning[strings.indexOf(strings[i])])))))
+               // console.log("divided length: ",(distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[strings.indexOf(strings[i])]) - noteToInt(guitarTuning[strings.indexOf(strings[i])])))) / scaleLength))
+               // console.log("sf: ",Tone.Frequency(guitarTuning[strings.indexOf(getKeysByValue(strings, e.key.toLowerCase())[i])+1]).toFrequency())
+               // console.log("frequency: ",frequency);
+               // guitar.triggerAttack(frequency);
+            }
+         }
+      } else if ((getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(["tab"], ev[0].toLowerCase()).length>0&&ev[1])).length>0)) {
+         console.log("tab!!!!!!!")
+         // if (Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) {
+            e.stopPropagation(); 
+
+            let pressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1]));
+            console.log(strings);
+            console.log(e.key.toLowerCase());
+            console.log(pressedKeyMapped[0])
+            console.log(strings.indexOf(pressedKeyMapped[0]))
+            let stringsOuter = document.getElementById('strings');
+            for (let i = 0; i < pressedKeyMapped.length; i++) {
+               for (let j = 0; j < Number(strings.indexOf(pressedKeyMapped[i][0]))+1; j++) {
+                  stringsOuter.querySelector(`#string-${j+1}`).dispatchEvent(new Event('mousedown'))
+                  // console.log('key',Number(pressedKeyMapped)+1);
+                  // for (let k = 0; k < Number(strings.indexOf(beforePressedKeyMapped[j][0]))+1; k++) {
+                  //    let string = stringsOuter.querySelector(`#string-${k+1}`).parentElement;
+                  //    string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])].dispatchEvent(new Event('click'))
+                  // }
+               }
+            }
+            strumming = true;
+            strumming_string = Number(strings.indexOf(pressedKeyMapped[0][0]))+1;
+         // }
+         // } else if (getKeysByValue(strings, e.key.toLowerCase()).length > 0) {
+         //    e.stopPropagation(); 
+         //    console.log("first")
+         //    let pressedKeyMapped = getKeysByValue(strings, e.key.toLowerCase());                                    
+         //    console.log(strings);
+         //    console.log(e.key.toLowerCase());
+         //    let stringsOuter = document.getElementById('strings');
+         //    for (let i = 0; i < pressedKeyMapped.length; i++) {
+         //       for (let j = 0; j < strings.indexOf(pressedKeyMapped[i]); j++) {
+         //          stringsOuter.querySelector(`#string-${j+1}`).dispatchEvent(new Event('mousedown'))
+         //          // console.log('key',Number(pressedKeyMapped)+1);
+         //       }
+         //    }
+         // }
+      } else if (e.shiftKey) { //shift for moving shape, alt for flageolets, ctrl for barre cuz it causes window to close
          //left to right (0-21), bottom to top (1-6)
          e.preventDefault(); //disables all except t, w, n
          console.log('shift + ',e.key.toLowerCase());
@@ -431,7 +526,7 @@ console.log(stringsAmount)
             let stringsOuter = document.getElementById('strings');
             console.log(123123);
             let pressedKeyMapped = getKeysByValue(fretting_keys, e.key.toLowerCase());
-            let node_key = Math.min(...stringsOuter.getAttribute("pitchbinding").split(',').map((e)=>noteToInt(e)-noteToInt(guitarTuning[stringsOuter.getAttribute("pitchbinding").split(',').indexOf(e)])).filter((e)=>e!=0)); //if ctrl is not pressed, if it's pressed all the eys must move
+            let node_key = Math.min(...stringsOuter.getAttribute("pitchbinding").split(',').map((e)=>noteToInt(e)-noteToInt(guitarTuning[stringsOuter.getAttribute("pitchbinding").split(',').indexOf(e)])).filter((e)=>e!=0)); //if ctrl is not pressed, if it's pressed all the keys must move
             console.log("nk ",node_key);
             let delta_node_key = node_key - Number(pressedKeyMapped[0]);
             for (let i = 0; i < pressedKeyMapped.length; i++) {
@@ -477,18 +572,121 @@ console.log(stringsAmount)
                   // pb_changed=false;
                }
             }
-         } else if (getKeysByValue(strings, e.key.toLowerCase()).length > 0) {
-            let pressedKeyMapped = getKeysByValue(strings, e.key.toLowerCase());
+         } else if (getKeysByValue(["!","@","#","$","%","^"], e.key.toLowerCase()).length > 0) { //temporary solution since OS disallows to view which key is being shifted
+            console.log()
+            console.log("shift + num!!!")
+            console.log()
+            let stringsOuter = document.getElementById('strings');
+            console.log(123123);
+            let pressedKeyMapped = getKeysByValue(["!","@","#","$","%","^"], e.key.toLowerCase());
+            let node_key = Math.min(...[...stringsOuter.children].filter((e)=>guitarTuning[[...stringsOuter.children].indexOf(e)]!=stringsOuter.getAttribute('pitchbinding').split(',')[[...stringsOuter.children].indexOf(e)]).map((e)=>[...stringsOuter.children].indexOf(e))); //if ctrl is not pressed, if it's pressed all the keys must move
+            console.log("nk ",node_key);
+            console.log([...stringsOuter.children].filter((e)=>guitarTuning[[...stringsOuter.children].indexOf(e)]!=stringsOuter.getAttribute('pitchbinding').split(',')[[...stringsOuter.children].indexOf(e)]).map((e)=>[...stringsOuter.children].indexOf(e)))
+            let delta_node_key = Number(pressedKeyMapped[0]) - node_key;
+            console.log("diff is ",delta_node_key)
+            console.log(pressedKeyMapped)
+            
+            // let string = stringsOuter.querySelector(`#string-${j+1}`).parentElement;
+            // if (noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]) - delta_node_key == 0) {
+            //    break;
+            // }
+            // if (stringsOuter.getAttribute("pitchbinding").split(',')[j] == guitarTuning[j] && !isSF) {
+            //    continue;
+            // }
+            // startedCycle = true;
+            // let diff = node_key - pressedKeyMapped[i];
+            // if (stringsOuter.getAttribute("pitchbinding").split(',')[j] == guitarTuning[j] && !isSF) {
+            //    continue;
+            // }
+            if (delta_node_key == 0) {
+               return;
+            } else if (delta_node_key > 0) {
+               // noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]) - delta_node_key
+               for (let i = 0; i < pressedKeyMapped.length; i++) {
+                  for (let j = Number(document.getElementById('strings').getAttribute('stringsamount')) - 1; j >= 0; j--) {
+                     console.log('j',j)
+                     // delta_node_key = Number(pressedKeyMapped[0]) - node_key;
+                     if (delta_node_key+j+1>Number(document.getElementById('strings').getAttribute('stringsamount'))) {
+                        console.log(delta_node_key+j+1)
+                        console.log("string out of range!");
+                        let string = stringsOuter.querySelector(`#string-${j+1}`).parentElement;
+                        string.children[string.children.length-1].querySelectorAll('rect')[0].dispatchEvent(new Event('click'));
+                        continue;
+                     }
+                     console.log("\ncalcs: ")
+                     console.log(delta_node_key+j+1)
+                     console.log(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]))
+                     let string = stringsOuter.querySelector(`#string-${delta_node_key+j+1}`).parentElement;
+                     string.children[string.children.length-1].querySelectorAll('rect')[noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j])].dispatchEvent(new Event('click'));                     
+                     string = stringsOuter.querySelector(`#string-${j+1}`).parentElement;
+                     string.children[string.children.length-1].querySelectorAll('rect')[0].dispatchEvent(new Event('click'));
+                  }
+               }
+            } else {
+               for (let i = 0; i < pressedKeyMapped.length; i++) {
+                  for (let j = 0; j < Number(document.getElementById('strings').getAttribute('stringsamount')); j++) {
+                     console.log('j',j)
+                     // delta_node_key = Number(pressedKeyMapped[0]) - node_key;
+                     if (delta_node_key+j+1<1) {
+                        console.log(delta_node_key+j+1)
+                        console.log("string out of range!");
+                        let string = stringsOuter.querySelector(`#string-${j+1}`).parentElement;
+                        string.children[string.children.length-1].querySelectorAll('rect')[0].dispatchEvent(new Event('click'));
+                        continue;
+                     }
+                     console.log("\ncalcs: ")
+                     console.log(delta_node_key+j+1)
+                     console.log(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]))
+                     let string = stringsOuter.querySelector(`#string-${delta_node_key+j+1}`).parentElement;
+                     string.children[string.children.length-1].querySelectorAll('rect')[noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j])].dispatchEvent(new Event('click'));                     
+                     string = stringsOuter.querySelector(`#string-${j+1}`).parentElement;
+                     string.children[string.children.length-1].querySelectorAll('rect')[0].dispatchEvent(new Event('click'));
+                  }
+               }
+            }
+            // console.log('dnk ',delta_node_key);
+            // console.log("note(current): ",stringsOuter.getAttribute("pitchbinding").split(',')[j],", int: ",noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]));
+            // console.log("tuning: ",guitarTuning[j],", int: ",noteToInt(guitarTuning[j]))
+            // console.log("note shift",noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]));
+            // console.log("shift amount ", noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]) - delta_node_key);
+            // string.children[string.children.length-1].querySelectorAll('rect')[noteToInt(pitchBinding[j]) - noteToInt(guitarTuning[j]) + Number(pressedKeyMapped[i]) > fretsAmount ? fretsAmount : noteToInt(pitchBinding[j]) - noteToInt(guitarTuning[j]) + Number(pressedKeyMapped[i])].dispatchEvent(new Event('click'));
+            //this thing changes only upper string in pitchbinding for some reason (probably cause last step of this cycle, as other steps, uses pitchbinding from state or smth)
+            // string.children[string.children.length-1].querySelectorAll('rect')[noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[j]) - noteToInt(guitarTuning[j]) - delta_node_key].dispatchEvent(new Event('click'));
+            // while (!pb_changed) {
+            //    console.log("wait")
+            // }
+            // pb_changed=false;
          }
-      }
-      else if ((getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) || (getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0)) {
+      } else if ((getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) || (getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0)) {
          e.stopPropagation();
          if (getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) {
             if (e.ctrlKey || map.ctrl) { //shift for moving shape, alt for flageolets, ctrl for barre cuz it causes window to close
-               
                e.preventDefault(); //disables all except t, w, n
+               let beforePressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1]));
+               let pressedKeyMapped = getKeysByValue(fretting_keys, e.key.toLowerCase());
+               let stringsOuter = document.getElementById('strings');
+               for (let i = 0; i < pressedKeyMapped.length; i++) {
+                  for (let j = 0; j < beforePressedKeyMapped.length; j++) {
+                     for (let k = 0; k < Number(strings.indexOf(beforePressedKeyMapped[j][0]))+1; k++) {                        
+                        let string = stringsOuter.querySelector(`#string-${k+1}`).parentElement;
+                        string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])].dispatchEvent(new Event('click'))
+                     }
+                  }
+               }
+               if (isSF) {
+                  console.log()
+                  console.log("strings amount: ",stringsOuter.getAttribute('stringsamount'))
+                  console.log()
+                  for (let j = 0; j < beforePressedKeyMapped.length; j++) {
+                     for (let k = Number(strings.indexOf(beforePressedKeyMapped[j][0]))+1; k < Number(stringsOuter.getAttribute('stringsamount')); k++) {
+                        let stringsOuter = document.getElementById('strings');
+                        let string = stringsOuter.querySelector(`#string-${k+1}`).parentElement;
+                        string.children[string.children.length-1].querySelectorAll('rect')[0].dispatchEvent(new Event('click'))
+                     }
+                  }
+               }
                console.log('ctrl + ',e.key.toLowerCase());
-
+               return;
             } else {
                let beforePressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1]));
                let pressedKeyMapped = getKeysByValue(fretting_keys, e.key.toLowerCase());
@@ -511,25 +709,52 @@ console.log(stringsAmount)
                }
             }
          } else if (getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0) {
-            let beforePressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1]));
-            let pressedKeyMapped = getKeysByValue(strings, e.key.toLowerCase());
-            console.log(`ll's: ${pressedKeyMapped.length}, ${beforePressedKeyMapped}`)
-            for (let i = 0; i < pressedKeyMapped.length; i++) {
-               for (let j = 0; j < beforePressedKeyMapped.length; j++) {
-                  let stringsOuter = document.getElementById('strings');
-                  console.log(beforePressedKeyMapped[j][0])
-                  console.log(strings.indexOf(beforePressedKeyMapped[j][0]));
-                  console.log(pressedKeyMapped[i]);
-                  console.log(strings)
-                  console.log(Number(pressedKeyMapped[i])+1);
-                  console.log(pressedKeyMapped)
-                  let string = stringsOuter.querySelector(`#string-${Number(pressedKeyMapped[i])+1}`).parentElement;
-                  console.log(pressedKeyMapped[i])
-                  console.log(string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])])
-                  console.log(Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0])))
-                  console.log("str1",pitchBinding[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))])
-                  guitar.triggerRelease(pitchBinding[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))]);
-                  string.children[string.children.length-1].querySelectorAll('rect')[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))].dispatchEvent(new Event('click'))
+            if (e.ctrlKey || map.ctrl) { //shift for moving shape, alt for flageolets, ctrl for barre cuz it causes window to close
+               e.preventDefault(); //disables all except t, w, n
+               let beforePressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1]));
+               let pressedKeyMapped = getKeysByValue(strings, e.key.toLowerCase());
+               let stringsOuter = document.getElementById('strings');
+               for (let i = 0; i < pressedKeyMapped.length; i++) {
+                  for (let j = 0; j < beforePressedKeyMapped.length; j++) {
+                     for (let k = 0; k < Number(pressedKeyMapped[i])+1; k++) {
+                        let string = stringsOuter.querySelector(`#string-${k+1}`).parentElement;
+                        string.children[string.children.length-1].querySelectorAll('rect')[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))].dispatchEvent(new Event('click'))
+                     }
+                  }
+               }
+               if (isSF) {
+                  for (let i = 0; i < pressedKeyMapped.length; i++) {
+                     for (let k = Number(pressedKeyMapped[i])+1; k < Number(stringsOuter.getAttribute("stringsAmount")); k++) {
+                        console.log("strings amount: ",Number(strings.getAttribute("stringsAmount")))
+                        let stringsOuter = document.getElementById('strings');
+                        let string = stringsOuter.querySelector(`#string-${k+1}`).parentElement;
+                        string.children[string.children.length-1].querySelectorAll('rect')[0].dispatchEvent(new Event('click'))
+                     }
+                  }
+               }
+               console.log('ctrl + ',e.key.toLowerCase());
+               return;
+            } else {
+               let beforePressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1]));
+               let pressedKeyMapped = getKeysByValue(strings, e.key.toLowerCase());
+               console.log(`ll's: ${pressedKeyMapped.length}, ${beforePressedKeyMapped}`)
+               for (let i = 0; i < pressedKeyMapped.length; i++) {
+                  for (let j = 0; j < beforePressedKeyMapped.length; j++) {
+                     let stringsOuter = document.getElementById('strings');
+                     console.log(beforePressedKeyMapped[j][0])
+                     console.log(strings.indexOf(beforePressedKeyMapped[j][0]));
+                     console.log(pressedKeyMapped[i]);
+                     console.log(strings)
+                     console.log(Number(pressedKeyMapped[i])+1);
+                     console.log(pressedKeyMapped)
+                     let string = stringsOuter.querySelector(`#string-${Number(pressedKeyMapped[i])+1}`).parentElement;
+                     console.log(pressedKeyMapped[i])
+                     console.log(string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])])
+                     console.log(Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0])))
+                     console.log("str1",pitchBinding[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))])
+                     guitar.triggerRelease(pitchBinding[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))]);
+                     string.children[string.children.length-1].querySelectorAll('rect')[Number(fretting_keys.indexOf(beforePressedKeyMapped[j][0]))].dispatchEvent(new Event('click'))
+                  }
                }
             }
          }
@@ -595,6 +820,45 @@ window.onkeyup = (e)=>{
    }*/
    }
    }
+   } else if (strumming) { //((getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(["tab"], ev[0].toLowerCase()).length>0&&ev[1])).length>0) || (e.key.toLowerCase() == "tab" && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0)) && 
+      console.log("tab end!!!!!!!")
+      // if (Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) {
+         e.stopPropagation(); 
+
+         console.log("is strumming: ",strumming)
+         // let pressedKeyMapped = Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1]));
+         console.log(strings);
+         console.log(e.key.toLowerCase());
+         // console.log(pressedKeyMapped[0])
+         // console.log(strings.indexOf(pressedKeyMapped[0]))
+         let stringsOuter = document.getElementById('strings');
+         // for (let i = 0; i < pressedKeyMapped.length; i++) {
+         for (let j = 0; j < strumming_string; j++) {
+            stringsOuter.querySelector(`#string-${j+1}`).dispatchEvent(new Event('mouseup'))
+            // console.log('key',Number(pressedKeyMapped)+1);
+            // for (let k = 0; k < Number(strings.indexOf(beforePressedKeyMapped[j][0]))+1; k++) {
+            //    let string = stringsOuter.querySelector(`#string-${k+1}`).parentElement;
+            //    string.children[string.children.length-1].querySelectorAll('rect')[Number(pressedKeyMapped[i])].dispatchEvent(new Event('click'))
+            // }
+         }
+         // }
+         strumming = false;
+         strumming_string = false;
+      // }
+      // } else if (getKeysByValue(strings, e.key.toLowerCase()).length > 0) {
+      //    e.stopPropagation(); 
+      //    console.log("first")
+      //    let pressedKeyMapped = getKeysByValue(strings, e.key.toLowerCase());                                    
+      //    console.log(strings);
+      //    console.log(e.key.toLowerCase());
+      //    let stringsOuter = document.getElementById('strings');
+      //    for (let i = 0; i < pressedKeyMapped.length; i++) {
+      //       for (let j = 0; j < strings.indexOf(pressedKeyMapped[i]); j++) {
+      //          stringsOuter.querySelector(`#string-${j+1}`).dispatchEvent(new Event('mousedown'))
+      //          // console.log('key',Number(pressedKeyMapped)+1);
+      //       }
+      //    }
+      // }
    }
 }
 
@@ -607,6 +871,16 @@ useEffect(()=>{console.log()},[])
 
 function addSF(value) {
    setIsSF(value);
+}
+
+function setChordShape(shape) { //shape is an array of fret's indices
+   for (let i = 0; i < document.getElementById('strings').getAttribute('stringsamount'); i++) {
+      // for (let j = 0; j < document.getElementById('strings').getAttribute('fretsamount'); j++) {
+      let stringsOuter = document.getElementById('strings');
+      let string = stringsOuter.querySelector(`#string-${i+1}`).parentElement;
+      shape[i] ? string.children[string.children.length-1].querySelectorAll('rect')[shape[i]].dispatchEvent(new Event('click')) : string.children[string.children.length-1].querySelectorAll('rect')[0].dispatchEvent(new Event('click'))
+      // }
+   }
 }
 
 // let allowMicContext=()=>{};
@@ -628,6 +902,18 @@ function addSF(value) {
         <span onClickCapture={()=>{setTestvar("b");console.log("change")}}>{testvar}</span>
       </div>
       <EffectToggle style={{zIndex: 1}} label="Strict fretting" id="SF" checked={false} change={addSF} trueBypass={isSF} setTrueBypass={setIsSF}/>
+      <div style={{width: "5rem", height: "5rem", border: "3px solid black", background: "darkblue",zIndex: "10"}}>
+         <div style={{display: "block", marginLeft: "auto", marginRight: "auto", textAlign: "center"}} onClickCapture={(e)=>{setChordShapesShown(!chordShapesShown)}}>Chord shapes
+            <div style={{display: chordShapesShown ? "block" : "none", overflow: "auto", width: "10rem", height: "10rem", background: "#999999", position: "relative", left: "50%", display: "grid", gridTemplateColumns: "1fr 1fr 1fr"}}>
+               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,0,2,3])}}>C Major</div>
+               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([2,3,2,0])}}>D Major</div>
+               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,1,2,3,3,1])}}>F Major</div>
+               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,3,3,3,1,1])}}>B Major</div>
+               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,0,1,2,2,0])}}>E Major</div>
+               <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,2,2,2,0,0])}}>A Major</div>
+            </div>
+         </div>
+      </div>
       {/* <EffectToggle label="Volume" id="volume" checked={false} change={addVolume} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
       <EffectValue label="VolumeValue" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={0} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/> */}
       {/* transform: translateY(300px) rotate(315deg) !important; */}
@@ -1866,7 +2152,7 @@ function addSF(value) {
             { fretsTriggers }
          </g>
       </g>
-      <g transform='rotate(-45) translate(-205, 2650)' pitchbinding={pitchBinding} stringsamount={6} id="strings">
+      <g transform='rotate(-45) translate(-205, 2650)' pitchbinding={pitchBinding} stringsamount={6} fretsamount={21} id="strings">
          {/* todo: automatize this mess, make adequate tuning system */}
          {/* { <rect width="350" height="500" y="0"/> } */}
          <g transform='rotate(1.35)'>
