@@ -11,11 +11,22 @@ export default function History() {
   const [popups,setPopups] = useState({});
   const [test,setTest] = useState();
 
+  function handleCacheControl(url) {
+    // if (url.match(/\.data/) || url.match(/\.bundle/)) {
+    //   return "must-revalidate";
+    // }
+    // if (url.match(/\.mp4/) || url.match(/\.wav/)) {
+    return "immutable"; //since there is no mutable files (except you wanna get the latest version)
+    // }
+    // return "no-store";
+  }
+
     const { unityProvider, requestPointerLock, requestFullscreen, sendMessage, addEventListener, removeEventListener, isLoaded, loadingProgression } = useUnityContext({
         loaderUrl: "./build/webgl_build.loader.js",
         dataUrl: "./build/webgl_build.data",
         frameworkUrl: "./build/webgl_build.framework.js",
         codeUrl: "./build/webgl_build.wasm",
+        cacheControl: handleCacheControl
       });
 
       let trackedImage;
@@ -91,6 +102,20 @@ export default function History() {
       });
 
       window.onkeydown ??= (e)=>{started ? e.preventDefault() : null;console.log(e.keyCode);switch (e.keyCode) {case 70: requestFullscreen(!fullscreen);break; case 67: e.preventDefault();break; case 27: started = false;break;}};
+
+      window.onresize = (e) => {
+        let wrap = document.querySelector("div.map-mask-wrap");
+        let inner = [...wrap.children].slice(2)
+        let trackedImage = document.getElementById("trackedImage");
+        console.log(inner)
+        for (let i of inner) {
+          console.log(i)
+          i.style.width = `${trackedImage.clientWidth*characterMarkerSizePercentage/2}px`;
+          i.style.height = `${trackedImage.clientWidth*characterMarkerSizePercentage/2}px`;
+          i.style.left = `${trackedImage.clientWidth*(i.getAttribute("y")*0.01- characterMarkerSizePercentage*0.5/2)}px`;
+          i.style.top = `${trackedImage.clientHeight*(i.getAttribute("x")*0.01 - characterMarkerSizePercentage*0.5/2)}px`;
+        }      
+      }
     }
     },[isLoaded])
 
@@ -545,6 +570,7 @@ export default function History() {
     </p>
     </div>`}};
 
+
     const handleTriggerEventWeb = useCallback((EventName,x,y) => {
       // setTest((()=>{console.log("test ch");return i})());
       // i++;
@@ -555,7 +581,7 @@ export default function History() {
       let wrap = trackedImage.parentElement;
       if (!wrap.querySelector(`#${EventName}`)||[...wrap.querySelectorAll("div")].filter((e)=>e.id!="character").filter((e)=>Number(e.getAttribute("x"))==x&&Number(e.getAttribute("y"))==y).length == 0) {
         let el = document.createElement("div");
-        el.style.cssText = `background: #DCDCDC; border-radius: 50%; left: 50%; top: 50%; z-index: 10; width: ${trackedImage.clientWidth*characterMarkerSizePercentage/2}px; height: ${trackedImage.clientWidth*characterMarkerSizePercentage/2}px; left: ${trackedImage.clientWidth*(y*0.01- characterMarkerSizePercentage*0.5/2)}px; top: ${trackedImage.clientHeight*(x*0.01 - characterMarkerSizePercentage*0.5/2)}px; transform-style: preserve-3d;`
+        el.style.cssText = `background: #DCDCDC; border-radius: 50%; z-index: 10; width: ${trackedImage.clientWidth*characterMarkerSizePercentage/2}px; height: ${trackedImage.clientWidth*characterMarkerSizePercentage/2}px; left: ${trackedImage.clientWidth*(y*0.01- characterMarkerSizePercentage*0.5/2)}px; top: ${trackedImage.clientHeight*(x*0.01 - characterMarkerSizePercentage*0.5/2)}px; transform-style: preserve-3d;`
         el.setAttribute("x", x);
         el.setAttribute("y", y);
         el.id = EventName;

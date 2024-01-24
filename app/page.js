@@ -428,12 +428,14 @@ console.log(stringsAmount)
       console.log(map)
       console.log(`assertion: ${(getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0)}`)
       console.log(`assertion2: ${getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0}`)
-      if (Object.values(JSON.parse(localStorage.getItem("Chords"))).map(e=>e.key).includes(e.key.toLowerCase())) {
+      // JSON.parse(localStorage.getItem("Chords"))      
+      let chords = JSON.parse(localStorage.getItem("Chords")) || function(){localStorage.setItem('Chords', JSON.stringify([]));return []}();
+      if (Object.values(chords).map(e=>e.key).includes(e.key.toLowerCase())) {
          // console.log(Object.values(JSON.parse(localStorage.getItem("Chords"))).map(e=>[Object.getOwnPropertyNames(e), e.key.toLowerCase]).filter)
-         console.log(Object.keys(JSON.parse(localStorage.getItem("Chords"))).map(e=>[e,JSON.parse(localStorage.getItem("Chords"))[e].key]))
+         console.log(Object.keys(chords).map(e=>[e,chords[e].key]))
          console.log(e.key.toLowerCase())
-         console.log(JSON.parse(localStorage.getItem("Chords"))[Object.keys(JSON.parse(localStorage.getItem("Chords"))).map(e=>[e,JSON.parse(localStorage.getItem("Chords"))[e].key]).filter(el=>el[1]==e.key.toLowerCase())[0][0]].shape);
-         setChordShape(JSON.parse(localStorage.getItem("Chords"))[Object.keys(JSON.parse(localStorage.getItem("Chords"))).map(e=>[e,JSON.parse(localStorage.getItem("Chords"))[e].key]).filter(el=>el[1]==e.key.toLowerCase())[0][0]].shape)
+         console.log(chords[Object.keys(chords).map(e=>[e,chords[e].key]).filter(el=>el[1]==e.key.toLowerCase())[0][0]].shape);
+         setChordShape(chords[Object.keys(chords).map(e=>[e,chords[e].key]).filter(el=>el[1]==e.key.toLowerCase())[0][0]].shape)
          // window.dispatchEvent(new Event("keydown", {type: 'keydown', key: '6'}))
          // window.dispatchEvent(new Event("keydown", {type: 'keydown', key: 'tab'}))
          let stringsOuter = document.getElementById('strings');
@@ -496,6 +498,7 @@ console.log(stringsAmount)
             }
          }
       } else if ((getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(["tab"], ev[0].toLowerCase()).length>0&&ev[1])).length>0)) {
+         e.preventDefault()
          console.log("tab!!!!!!!")
          // if (Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0) {
             e.stopPropagation(); 
@@ -879,8 +882,9 @@ window.onkeyup = (e)=>{
 
 useEffect(()=>{
    if (window) {
+      let chordsJSON = JSON.parse(localStorage.getItem("Chords")) || function(){localStorage.setItem('Chords', JSON.stringify([]));return []}();
       let outer = document.getElementById("Chords");
-      let chords = JSON.parse(localStorage.getItem("Chords"))
+      let chords = chordsJSON
       outer.innerHTML=''
       for (let e in chords) {
          let el = document.createElement("div");
@@ -939,7 +943,7 @@ function addChord(e) {
     <main className={styles.main}>
       <div className={[styles.description, 'center-block text-center m-2']} style={{lineHeight: '3rem', zIndex:1}}>
         <span>Simple guitar amp based on <h5><a href="https://tonejs.github.io/" target='blank'>tone js</a></h5></span>
-        <span onClickCapture={()=>{setTestvar("b");console.log("change")}}>{testvar}</span>
+        {/* <span onClickCapture={()=>{setTestvar("b");console.log("change")}}>{testvar}</span> */}
       </div>
       <EffectToggle style={{zIndex: 1}} label="Strict fretting" id="SF" checked={false} change={addSF} trueBypass={isSF} setTrueBypass={setIsSF}/>
       <div style={{width: "5rem", height: "5rem", border: "3px solid black", background: "darkblue",zIndex: "10"}}>
@@ -950,14 +954,14 @@ function addChord(e) {
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,0,2,3])}}>C</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([2,3,2,0])}}>D</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,1,2,3,3,1])}}>F</div>
-                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,3,3,3,1,1])}}>B</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([2,4,4,4,2,2])}}>B</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,0,1,2,2,0])}}>E</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,2,2,2,0,0])}}>A</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([3,3,0,0,2,3])}}>G</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,0,0,2,2,0])}}>Em</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,2,2,0,0])}}>Am</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,3,2,0])}}>Dm</div>
-                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,2,3,3,1,1])}}>Bm</div>
+                  <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([2,3,4,4,2,2])}}>Bm</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,3,2,3])}}>C7</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,0,1,0])}}>A7</div>
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([1,0,0,0,2,3])}}>G7</div>
