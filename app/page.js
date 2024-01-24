@@ -47,7 +47,9 @@ const [delay, setDelay] = useState()
 const [isDelay, setIsDelay] = useState(false)
 const [reverb, setReverb] = useState() //memory leaks because of this value
 const [isReverb, setIsReverb] = useState(false)
-const effects = [[volume,isVolume],[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb]];
+const [pitchshifter, setPitchShifter] = useState() //memory leaks because of this value
+const [isPitchShifter, setIsPitchShifter] = useState(false)
+const effects = [[volume,isVolume],[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb], [pitchshifter, isPitchShifter]];
 
 const [stringsAmount, setStringsAmount] = useState(6);
 const [fretsAmount, setFretsAmount] = useState(21);
@@ -71,11 +73,13 @@ useEffect(()=>{
   setChorus(new Tone.Chorus(4,2.5,1).toDestination().start())
   setDelay(new Tone.FeedbackDelay("8n", .8).toDestination())
   setReverb(new Tone.Reverb(30).toDestination())
+  setPitchShifter(new Tone.PitchShift({pitch: 0, wet: 1}).toDestination())
 },[]);
 
 useEffect(()=>{
    if (mic) {
       mic.output = new Tone.Mono().toDestination();
+      console.log(mic)
    }
 },[mic])
 
@@ -84,6 +88,12 @@ useEffect(()=>{
     bitcrusher.wet.value = 1;
   }
 },[bitcrusher])
+
+// useEffect(()=>{
+//    if (typeof pitchshifter == Tone.PitchShift) {
+//      pitchshifter.wet.value = 1;
+//    }
+//  },[pitchshifter])
 //setInterval(() => console.log(meter.getValue()), 100);
 // const vol = new Tone.Volume(-120000000).toDestination();
 // const vargain = new Tone.Gain(1500).toDestination();
@@ -96,6 +106,7 @@ function allowMicContext() {
   //mic = new Tone.UserMedia().connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Volume(0.00000001)).toDestination();
   //mic.disconnect().toDestination();
   //mic.disconnect(new Tone.Gain(10000000000000000000000000000000000000)).toDestination();
+  mic.connect(new Tone.Convolver('./amp.wav').toDestination()).toDestination()
   mic.open()/*.then(() => {
     // promise resolves when input is available
     console.log("mic open");
@@ -322,6 +333,16 @@ function changeReverbValue(value) {
   setReverb(new Tone.Reverb(Number(value)).toDestination()); 
   changeEffectVal(new Tone.Reverb(Number(value)), reverb);
 }
+
+function addPitchShifter(value) {
+   setIsPitchShifter(value);
+   toggleEffect(value, pitchshifter);  
+ }
+ 
+ function changePitchShifterValue(value) {
+   setPitchShifter(new Tone.PitchShift({pitch: Number(value), wet: 1}).toDestination()); 
+   changeEffectVal(new Tone.PitchShift({pitch: Number(value), wet: 1}), pitchshifter);
+ }
 
 const fret_width = 10;
 
@@ -2787,6 +2808,10 @@ function addChord(e) {
           <EffectToggle label="Reverb" id="reverb" checked={false} change={addReverb} trueBypass={isReverb} setTrueBypass={setIsReverb}/>
           <span>*values above 150 requires a lot of memory, setting this above 150 may cause browser to crash</span>
           <EffectValue label="ReverbValue" id="reverb" defaultValue={30} change={changeReverbValue} min={0} max={30} trueBypass={isReverb} setTrueBypass={setIsReverb}/>
+        </div>
+        <div className="row effect">
+          <EffectToggle label="PitchShifter" id="pitchshifter" checked={false} change={addPitchShifter} trueBypass={isReverb} setTrueBypass={setIsPitchShifter}/>
+          <EffectValue label="PitchShifterValue" id="pitchshifter" defaultValue={0} change={changePitchShifterValue} min={-24} max={24} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter}/>
         </div>
       </div>
     </main>
