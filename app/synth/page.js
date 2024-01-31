@@ -4,6 +4,7 @@ import * as Tone from 'tone'
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { getKeysByValue } from '../libs/essentials.js';
+import '../css/synth.css'
 
 export default function Synth() {
 const [octave, setOctave] = useState(); //init octave
@@ -15,6 +16,8 @@ let overoctaves = 0;
 // useEffect(()=>{
     
 // },[])
+
+Tone.context.lookAhead = 0;
 
 // let renderSynth;
 let keyMap = [0,2,1,4,3,5,7,6,9,8,11,10] // ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"] to ["C","D","C#","E","D#","F","G","F#","A","G#","B","A#"]
@@ -29,9 +32,9 @@ useEffect(()=>{
     const key_width = 5;
     const keyborder_width = 1.25;
     const key_height = 280;
-    const gain = new Tone.Gain(100).toDestination();
-    var chorus = new Tone.Chorus(4, 5, 1).toDestination().start();
-    const distortion = new Tone.Distortion(0.95).toDestination();
+    // const gain = new Tone.Gain(100).toDestination();
+    // var chorus = new Tone.Chorus(4, 5, 1).toDestination().start();
+    // const distortion = new Tone.Distortion(0.95).toDestination();
     //const synth = new Tone.PolySynth(Tone.Synth).toDestination();
     const synth = new Tone.Sampler({
         urls: {
@@ -42,7 +45,7 @@ useEffect(()=>{
         },
         release: 1,
         baseUrl: "./samples/guitar-electric/",
-    }).toDestination().connect(distortion).connect(gain).connect(chorus).toDestination();
+    }).toDestination().toDestination();
     
     keysText = document.getElementById('keysValue');
     octaveText = document.getElementById('octaveValue');
@@ -116,7 +119,8 @@ useEffect(()=>{
         e.stopPropagation();
         if (keyToAppend.getAttribute("isPressed") == undefined) {
         keyToAppend.setAttribute("isPressed",'');
-        synth.triggerAttack(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`, Tone.now());
+        synth.triggerAttack(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`, Tone.context.currentTime);
+        synthsvg.children[[...synthsvg.children].indexOf(keyToAppend)].style.transform = "rotateX(15deg)";
         }
         console.log(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`);
         }
@@ -124,34 +128,39 @@ useEffect(()=>{
         e.stopPropagation();
         if (keyToAppend.getAttribute("isPressed") != undefined) {
         keyToAppend.removeAttribute("isPressed");
-        synth.triggerRelease(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`, Tone.now());
+        synth.triggerRelease(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`, Tone.context.currentTime);
+        synthsvg.children[[...synthsvg.children].indexOf(keyToAppend)].style.transform = "";
         }
         console.log(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`);
         }
         keyToAppend.onmouseleave = (e) => {
         e.stopPropagation();
-        synth.triggerRelease(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`, Tone.now());
+        synth.triggerRelease(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`, Tone.context.currentTime);
+        synthsvg.children[[...synthsvg.children].indexOf(keyToAppend)].style.transform = "";
         //console.log(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`);
         }
-        keyToAppend.ontouchstart = (e) => {
-        e.stopPropagation();
-        synth.triggerAttack(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`, Tone.now());
-        console.log(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`);
-        }
-        keyToAppend.ontouchend = (e) => {
-        e.stopPropagation();
-        synth.triggerRelease(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`, Tone.now());
-        console.log(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`);
-        }
+        // keyToAppend.ontouchstart = (e) => {
+        // e.stopPropagation();
+        // synth.triggerAttack(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`, Tone.context.currentTime);
+        // console.log(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`);
+        // }
+        keyToAppend.ontouchstart = (e) => {e.stopPropagation(); e.preventDefault(); keyToAppend.onmousedown(e)}
+        // keyToAppend.ontouchend = (e) => {
+        // e.stopPropagation();
+        // synth.triggerRelease(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`, Tone.context.currentTime);
+        // console.log(`${notes[[...synthsvg.children].indexOf(keyToAppend)-12*curoveroctaves ]}`+`${octave+curoveroctaves }`);
+        // }
+        keyToAppend.ontouchend = keyToAppend.ontouchcancel = (e) => {e.stopPropagation(); e.preventDefault(); keyToAppend.onmouseup(e)}
         if ((i+1)%12==0 && i != 0) {//[...synthsvg.children].indexOf(keyToAppend) == 11) { //12 - octave length
         overoctaves++;
         }
         //synthsvg.appendChild(keyToAppend);
         }
         
-        synthsvg.setAttribute('width', [...synthsvg.children].filter(e=>e.classList.contains('tone')).length*55+2.5*2);
+        // synthsvg.setAttribute('width', [...synthsvg.children].filter(e=>e.classList.contains('tone')).length*55+2.5*2);
         //synthsvg.setAttribute('height', '100');
-        synthsvg.setAttribute('height', 280+2.5*2);
+        // synthsvg.setAttribute('height', 280+2.5*2);
+        synthsvg.setAttribute("viewBox", `0 0 ${[...synthsvg.children].filter(e=>e.classList.contains('tone')).length*55+2.5*2} ${280+2.5*2}`)
         synthblock.appendChild(synthsvg);
     })
     
@@ -206,6 +215,7 @@ useEffect(()=>{
         console.log('mapped',mappedKey );
         synthsvg.children[mappedKey].dispatchEvent(new Event('mouseup'));
         console.log(synthsvg.children[mappedKey].getAttribute('isPressed'));
+        synthsvg.children[mappedKey].style.transform = "";
         /*if (synthsvg.children[mappedKey].getAttribute("isPressed")) {
         synthsvg.children[mappedKey].setAttribute("isPressed",false);
         }*/
@@ -259,37 +269,37 @@ useEffect(()=>{
     let C2 = document.getElementById("C2");
     let C4 = document.getElementById("C4");
     C2.onmousedown = () => {
-        console.log(Tone.now());
-        synth.triggerAttack("C2", Tone.now());
+        console.log(Tone.context.currentTime);
+        synth.triggerAttack("C2", Tone.context.currentTime);
     }
     C2.onmouseup = () => {
-        console.log(Tone.now());
-        synth.triggerRelease("C2",Tone.now());
-        console.log(Tone.now());
+        console.log(Tone.context.currentTime);
+        synth.triggerRelease("C2",Tone.context.currentTime);
+        console.log(Tone.context.currentTime);
     }
     C4.onmousedown = () => {
-        synth.triggerAttack("C4", Tone.now());
+        synth.triggerAttack("C4", Tone.context.currentTime);
     }
     C4.onmouseup = () => {
-        synth.triggerRelease(["C4"],Tone.now());
+        synth.triggerRelease(["C4"],Tone.context.currentTime);
     }
     window.onkeydown = (e) => {
-        console.log(Tone.now());
+        console.log(Tone.context.currentTime);
         if (e.key == "c" && !C4.getAttribute("isPressed")) {
-            synth.triggerAttack("C4", Tone.now());
+            synth.triggerAttack("C4", Tone.context.currentTime);
             C4.setAttribute("isPressed", true);
         } else if (e.key == "v" && !C2.getAttribute("isPressed")) {
-            synth.triggerAttack("C2", Tone.now());
+            synth.triggerAttack("C2", Tone.context.currentTime);
             C2.setAttribute("isPressed", true);
         }
     }
     window.onkeyup = (e) => {
-        console.log(Tone.now());
+        console.log(Tone.context.currentTime);
         if (e.key == "c") {
-            synth.triggerRelease("C4", Tone.now());        
+            synth.triggerRelease("C4", Tone.context.currentTime);        
             C4.removeAttribute("isPressed");
         } else if (e.key == "v") {
-            synth.triggerRelease("C2", Tone.now());
+            synth.triggerRelease("C2", Tone.context.currentTime);
             C2.removeAttribute("isPressed");
         }
     }*/

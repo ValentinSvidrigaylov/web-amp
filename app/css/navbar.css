@@ -1,9 +1,9 @@
 .navbar {
     z-index: 2147483647;
-    width: 100vw;
-    padding: 0.5em;
-    padding-top: 1.5em;
-    font-size: 1.1em;
+    /* width: 100vw; */
+    padding: 1rlh;
+    /* padding-top: 1.5em; */
+    font-size: 1.2em;
     display: flex !important;
     flex-direction: row !important;
     justify-content: space-around !important;
@@ -13,4 +13,8 @@
 
 .navbar .active {
     text-decoration: underline !important;
+}
+
+hr {
+    margin: 0 0;
 }

@@ -8,6 +8,10 @@ import Link from 'next/link'
 import EffectToggle from "./components/EffectToggle.js";
 import EffectValue from "./components/EffectValue.js";
 import { getKeysByValue } from './libs/essentials.js';
+import {
+	isAnyAudioContext, isAnyAudioNode,
+	isAnyAudioParam, isAnyOfflineAudioContext,
+} from "standardized-audio-context";
 
 //const meter = new Tone.Meter();
 //let mic = new Tone.UserMedia().connect(meter).toDestination();
@@ -16,6 +20,8 @@ var map = {};
 
 export default function Home(props) {
 let pb_changed = false;
+
+Tone.context.lookAhead = 0;
 
 const [mic, setMic] = useState();
 
@@ -49,7 +55,9 @@ const [reverb, setReverb] = useState() //memory leaks because of this value
 const [isReverb, setIsReverb] = useState(false)
 const [pitchshifter, setPitchShifter] = useState() //memory leaks because of this value
 const [isPitchShifter, setIsPitchShifter] = useState(false)
-const effects = [[volume,isVolume],[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb], [pitchshifter, isPitchShifter]];
+let effects = [[volume,isVolume],[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb], [pitchshifter, isPitchShifter]];
+const _start_effects = [[volume,isVolume],[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb], [pitchshifter, isPitchShifter]];
+
 
 const [stringsAmount, setStringsAmount] = useState(6);
 const [fretsAmount, setFretsAmount] = useState(21);
@@ -73,7 +81,7 @@ useEffect(()=>{
   setChorus(new Tone.Chorus(4,2.5,1).toDestination().start())
   setDelay(new Tone.FeedbackDelay("8n", .8).toDestination())
   setReverb(new Tone.Reverb(30).toDestination())
-  setPitchShifter(new Tone.PitchShift({pitch: 0, wet: 1}).toDestination())
+  setPitchShifter(new Tone.PitchShift({pitch: 0, wet: 0.99}).toDestination())
 },[]);
 
 useEffect(()=>{
@@ -106,8 +114,8 @@ function allowMicContext() {
   //mic = new Tone.UserMedia().connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Gain(3.4028234663852886e+38)).connect(new Tone.Volume(0.00000001)).toDestination();
   //mic.disconnect().toDestination();
   //mic.disconnect(new Tone.Gain(10000000000000000000000000000000000000)).toDestination();
-  mic.connect(new Tone.Convolver('./amp.wav').toDestination()).toDestination()
-  mic.open()/*.then(() => {
+//   mic.connect(new Tone.Convolver('amp.wav').toDestination()).toDestination()
+  mic.open() /*.then(() => {
     // promise resolves when input is available
     console.log("mic open");
     // print the incoming mic levels in decibels
@@ -130,19 +138,30 @@ function allowMicContext() {
 function toggleEffect(value, effect) {
 mic.open()
 Tone.start()
-if (value) {
+if (value) { //wrong sequencing here
   console.log('triggered');
   //add sequencing here
   //mic.connect(gain).toDestination();
   //mic.connect(meter).connect(vargain).connect(vol).toDestination();
   // console.log(gain.gain)
-  new Tone.Mono(mic.connect(effect).toDestination()).toDestination();
-  guitar.connect(effect).toDestination();
-  // let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+   //   let amount=1
+   //   effects.move(effects.map((e)=>e[0]).indexOf(effect),effects.map((e)=>e[0]).indexOf(effect)+amount);
+  let mapped = [...effects.map((e)=>e[0] == effect ? (()=>{let t = e;e[1]=true;return e})() : (()=>{let t = e;e[1]=e[1];return e})()).filter((e)=>e[1])].map((e)=>e[0])
+  console.log(mapped)
+  console.log(effects)
+//   new Tone.Mono(mic.connect(effect).toDestination()).toDestination();
+//   guitar.connect(effect).toDestination();
+// mic.chain(...[new Tone.Distortion(100).toDestination(), new Tone.Delay(0.6).toDestination()].reverse()).toDestination()
+// console.log([new Tone.Distortion(100).toDestination(), new Tone.Delay(0.6).toDestination()].reverse())
+// mic.disconnect().chain(...[...mapped].reverse()).toDestination()
+// console.log(mapped.reverse())
+  mic.disconnect().toDestination().chain(...[...mapped]).toDestination();
+//   guitar.disconnect().toDestination().chain(...[...mapped].toReversed()).toDestination();
+  // let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
   // console.log(mapped)
   //console.log(effects[1][1]);
   //[...a.filter((e)=>e[1])].map((e)=>e[0])
-  //let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+  //let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
   //console.log(mapped)
   //mic.chain().toDestination();
   //setTimeout(()=>{mic.disconnect(vargain)},5000)
@@ -151,23 +170,62 @@ if (value) {
 } else {
   console.log('disconnected')
   //mic.disconnect(meter).disconnect(vargain).disconnect(vol).toDestination();
-  let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+  let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
   console.log(mapped)
   mapped = mapped.filter((e)=>e!=effect)
   console.log(mapped)
-  mic.disconnect().chain(...[...mapped]).toDestination();
-  guitar.disconnect().chain(...[...mapped]).toDestination();
+  mic.disconnect().toDestination().chain(...[...mapped]).toDestination();
+//   guitar.disconnect().toDestination().chain(...[...mapped].toReversed()).toDestination();
   //mic.disconnect(vargain).disconnect(vol).toDestination();
   //mic.close()
   //mic = new Tone.UserMedia().toDestination();
 }
 }
 
-function changeEffectVal(newVal,oldVal) {
+function handlePositionChange(effect, amount) {
+   //works but fails when in reverse
+   mic.open()
+   Tone.start()
+   let t0 = effects[0]
+   let t = effects[1]
+   // let t = [...effects.filter((e)=>e[1]).map((e)=>e[0].toDestination())]
+   effects.move(effects.map((e)=>e[0]).indexOf(effect),effects.map((e)=>e[0]).indexOf(effect)+amount > 0 ? effects.map((e)=>e[0]).indexOf(effect)+amount % effects.length : effects.length + (effects.map((e)=>e[0]).indexOf(effect)+amount % effects.length));
+   console.log(effects)
+   let mapped = effects.filter((e)=>e[1]).map((e)=>e[0].toDestination())
+   console.log(mapped)
+   console.log("eq: ",t===effects[2])
+   console.log("eq2:", t0===effects[0])
+   console.log(t)
+   console.log(effects[2])
+   // console.log(t.toReversed())
+   // console.log(mapped.map(e=>e instanceof Tone.ToneAudioNode))
+   // console.log(mapped.map(e=>isAnyAudioNode(e)))
+   console.log(mic)
+   // toggleEffect(effect,true)
+   //disconnects nodes here but cant connect for some reason when differs from current effect chain
+   //fails when moving node passes through turned on node but after that all nodes before turned on node work
+   //all this probably happens because array that contains usestates is mutable but it cant
+   // console.log(mapped.equals(t.toReversed()))
+   // console.log(mapped[0] == t[1])
+   // console.log(mapped[1] == t[0])
+   //found the issue: this all happens because it connects not right
+   //i.e. 
+   //mic.disconnect().toDestination().chain(...[...mapped].toReversed()).toDestination();
+   //mic.disconnect().toDestination().chain(...[...mapped]).toDestination();
+   //tested on ons and offs, fails after three effects are connected and one of them disconnects: connects with different shape, with fan connection this doesnt seem to happend but all effects that were before current are on
+   //all fails when effects array mutates since nodes are not exactly the same
+   console.log(mapped[0])
+   console.log(effects.filter((e)=>e[1]).map((e)=>e[0].toDestination()))
+   mic.disconnect().toDestination().chain(...mapped).toDestination();
+   // mic.disconnect().chain(new Tone.PitchShift(12).toDestination()).toDestination();
+   // guitar.disconnect().toDestination().chain(...[...mapped]).toDestination();
+ }
+ 
+ function changeEffectVal(newVal,oldVal) {
    mic.open()
    Tone.start()
    let newEffectVal = newVal.toDestination();
-   let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+   let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
    console.log(mapped)
    mapped = mapped.filter((e)=>e!=oldVal)
    console.log(mapped)
@@ -226,11 +284,11 @@ function addGain(value) {
     //mic.connect(meter).connect(vargain).connect(vol).toDestination();
     console.log(gain.gain)
     mic.connect(gain).toDestination();
-    let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+    let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
     console.log(mapped)
     //console.log(effects[1][1]);
     //[...a.filter((e)=>e[1])].map((e)=>e[0])
-    //let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+    //let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
     //console.log(mapped)
     //mic.chain().toDestination();
     //setTimeout(()=>{mic.disconnect(vargain)},5000)
@@ -240,7 +298,7 @@ function addGain(value) {
     setIsGain(false);
     console.log('disconnected')
     //mic.disconnect(meter).disconnect(vargain).disconnect(vol).toDestination();
-    let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+    let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
     console.log(mapped)
     mapped = mapped.filter((e)=>e!=gain)
     console.log(mapped)
@@ -260,7 +318,7 @@ function changeGainValue(value) {
   changeEffectVal(new Tone.Gain(value), gain);
   //mic.disconnect(gain).connect(new Tone.Gain(value)).toDestination();
   // let newGain = new Tone.Gain(value).toDestination();
-  // let mapped  = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+  // let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
   // console.log(mapped)
   // mapped = mapped.filter((e)=>e!=gain)
   // console.log(mapped)
@@ -340,8 +398,8 @@ function addPitchShifter(value) {
  }
  
  function changePitchShifterValue(value) {
-   setPitchShifter(new Tone.PitchShift({pitch: Number(value), wet: 1}).toDestination()); 
-   changeEffectVal(new Tone.PitchShift({pitch: Number(value), wet: 1}), pitchshifter);
+   setPitchShifter(new Tone.PitchShift({pitch: Number(value), wet: 0.99}).toDestination()); 
+   changeEffectVal(new Tone.PitchShift({pitch: Number(value), wet: 0.99}), pitchshifter);
  }
 
 const fret_width = 10;
@@ -449,10 +507,10 @@ console.log(stringsAmount)
       console.log(map)
       console.log(`assertion: ${(getKeysByValue(fretting_keys, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(strings, ev[0].toLowerCase()).length>0&&ev[1])).length>0)}`)
       console.log(`assertion2: ${getKeysByValue(strings, e.key.toLowerCase()).length > 0 && Object.entries(map).filter((ev)=>(getKeysByValue(fretting_keys, ev[0].toLowerCase()).length>0&&ev[1])).length>0}`)
-      // JSON.parse(localStorage.getItem("Chords"))      
-      let chords = JSON.parse(localStorage.getItem("Chords")) || function(){localStorage.setItem('Chords', JSON.stringify([]));return []}();
+      // JSON.parse(localStorage.getItem("chords"))      
+      let chords = JSON.parse(localStorage.getItem("chords")) || function(){localStorage.setItem('chords', JSON.stringify([]));return []}();
       if (Object.values(chords).map(e=>e.key).includes(e.key.toLowerCase())) {
-         // console.log(Object.values(JSON.parse(localStorage.getItem("Chords"))).map(e=>[Object.getOwnPropertyNames(e), e.key.toLowerCase]).filter)
+         // console.log(Object.values(JSON.parse(localStorage.getItem("chords"))).map(e=>[Object.getOwnPropertyNames(e), e.key.toLowerCase]).filter)
          console.log(Object.keys(chords).map(e=>[e,chords[e].key]))
          console.log(e.key.toLowerCase())
          console.log(chords[Object.keys(chords).map(e=>[e,chords[e].key]).filter(el=>el[1]==e.key.toLowerCase())[0][0]].shape);
@@ -465,7 +523,7 @@ console.log(stringsAmount)
          // window.dispatchEvent(event);
          // const event2 = new KeyboardEvent('keydown', { key: "tab" });
          // window.dispatchEvent(event2);
-         // setChordShape(Object.values(JSON.parse(localStorage.getItem("Chords"))).map(e=>[Object.getOwnPropertyNames(e),e.shape]).filter(e=>e[0]==Object.getOwnPropertyNames(e))[1]);
+         // setChordShape(Object.values(JSON.parse(localStorage.getItem("chords"))).map(e=>[Object.getOwnPropertyNames(e),e.shape]).filter(e=>e[0]==Object.getOwnPropertyNames(e))[1]);
       } else if (e.altKey) {
          e.preventDefault(); //undefined behaviour
          console.log('alt + ',e.key.toLowerCase());
@@ -901,21 +959,90 @@ window.onkeyup = (e)=>{
    }
 }
 
+let current_ir;
+
 useEffect(()=>{
    if (window) {
-      let chordsJSON = JSON.parse(localStorage.getItem("Chords")) || function(){localStorage.setItem('Chords', JSON.stringify([]));return []}();
-      let outer = document.getElementById("Chords");
-      let chords = chordsJSON
-      outer.innerHTML=''
-      for (let e in chords) {
-         let el = document.createElement("div");
-         el.onclick = () => {setChordShape(chords[e].shape)};
-         el.style.border = "3px solid black";
-         el.textContent = e
-         outer.appendChild(el)
+      //changePos section
+      // {
+      //    let handlePositionChange = (effect, amount) => {
+      //       if (mic) {
+      //          mic.open()
+      //          Tone.start()
+      //          effects.move(effects.map((e)=>e[0]).indexOf(effect),effects.map((e)=>e[0]).indexOf(effect)+amount > 0 ? effects.map((e)=>e[0]).indexOf(effect)+amount % effects.length : effects.length + (effects.map((e)=>e[0]).indexOf(effect)+amount % effects.length));
+      //          console.log(effects)
+      //          let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0])
+      //          console.log(mapped)
+      //          mic.disconnect().chain(...[...mapped]).toDestination();
+      //          guitar.disconnect().chain(...[...mapped]).toDestination();
+      //       }
+      //     }
+
+      //    let outer = [...document.getElementById("effects").getElementsByClassName("effect")];
+
+      //    for (let i of outer) {
+      //       let up = document.createElement("button");
+      //       up.textContent = '↑';
+      //       up.classList.add(...'center-block p-0 arrow-sign'.split(' '));
+      //       up.onClickCapture = handlePositionChange(_start_effects[outer.indexOf(i)][0],-1)
+      //       let down = document.createElement("button");
+      //       down.textContent = '↓';
+      //       down.classList.add(...'center-block p-0 arrow-sign'.split(' '));
+      //       down.onClickCapture = handlePositionChange(_start_effects[outer.indexOf(i)][0],1)
+      //       i.prepend(up);
+      //       i.appendChild(down);
+      //    }
+      //    //<button className='center-block p-0 arrow-sign' onClickCapture={handlePositionChange(distortion,-1)}>↑</button>
+      //    //<button className='center-block p-0 arrow-sign' onClickCapture={handlePositionChange(distortion,1)}>↓</button>
+      // }
+
+      {
+         //IRs section
+         let irsJSON = JSON.parse(localStorage.getItem("irs")) || function(){localStorage.setItem('irs', JSON.stringify({}));return {}}();
+         let outer = document.getElementById("irs");
+         let irs = irsJSON
+         outer.innerHTML=''
+         console.log("irs: ",irs)
+
+         let reset = document.createElement("div");
+         reset.onclick = () => {console.log(mic);mic.open();Tone.start(); let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+            console.log(mapped)
+            // mapped = mapped.filter((e)=>e!=effect)
+            // console.log(mapped)
+            mic.disconnect().chain(...[...mapped]).toDestination();
+            guitar.disconnect().chain(...[...mapped]).toDestination(); current_ir=undefined};
+         reset.style.border = "3px solid black";
+         reset.textContent = "reset current IR"
+         outer.appendChild(reset)
+
+
+         for (let e in irs) {
+            let el = document.createElement("div");
+            // console.log(irs[e])
+            el.onclick = () => {console.log(irs[e]);console.log(mic);mic.open();Tone.start(); if (current_ir!=undefined) {mic.disconnect(current_ir);guitar.disconnect(current_ir)};mic.connect(new Tone.Convolver(irs[e]).toDestination()).toDestination();guitar.connect(new Tone.Convolver(irs[e]).toDestination()).toDestination();current_ir=irs[e]};
+            current_ir = irs[e]
+            el.style.border = "3px solid black";
+            el.textContent = e
+            outer.appendChild(el)
+         }
+      }
+
+      {
+         //Chords section
+         let chordsJSON = JSON.parse(localStorage.getItem("chords")) || function(){localStorage.setItem('chords', JSON.stringify({}));return {}}();
+         let outer = document.getElementById("Chords");
+         let chords = chordsJSON
+         outer.innerHTML=''
+         for (let e in chords) {
+            let el = document.createElement("div");
+            el.onclick = () => {setChordShape(chords[e].shape)};
+            el.style.border = "3px solid black";
+            el.textContent = e
+            outer.appendChild(el)
+         }
       }
    }
-},[])
+},[mic])
 
 useEffect(()=> () => {
    window.onkeydown = null;
@@ -945,9 +1072,50 @@ function addChord(e) {
       console.log(e.target[1].value)
       let parsedValue = e.target[1].value.includes("[") && e.target[1].value.includes("]") ? e.target[1].value.replace("[","").replace("]","").includes(",") ? e.target[1].value.replace("[","").replace("]","").split(",").map(e=>Number(e)) : e.target[1].value.replace("[","").replace("]","").includes(", ") ? e.target[1].value.replace("[","").replace("]","").split(", ").map(e=>Number(e)) : null : e.target[1].value.includes(",") ? e.target[1].value.split(",").map(e=>Number(e)) : e.target[1].value.includes(", ") ? e.target[1].value.split(", ").map(e=>Number(e)) : null;
       console.log(parsedValue)
-      parsedValue && localStorage.getItem("Chords") && JSON.parse(localStorage.getItem("Chords"))[e.target[0].value] ? (confirm(`Replace existing chord with this name? (${e.target[0].value})`) && localStorage.setItem("Chords", JSON.stringify({...JSON.parse(localStorage.getItem("Chords")), [e.target[0].value]: {key: e.target[2].value, shape: parsedValue}}))) : localStorage.setItem("Chords", JSON.stringify({...JSON.parse(localStorage.getItem("Chords")), [e.target[0].value]: {key: e.target[2].value.toLowerCase(), shape: parsedValue}}));
+      parsedValue && localStorage.getItem("chords") && JSON.parse(localStorage.getItem("chords"))[e.target[0].value] ? (confirm(`Replace existing chord with this name? (${e.target[0].value})`) && localStorage.setItem("chords", JSON.stringify({...JSON.parse(localStorage.getItem("chords")), [e.target[0].value]: {key: e.target[2].value, shape: parsedValue}}))) : localStorage.setItem("chords", JSON.stringify({...JSON.parse(localStorage.getItem("chords")), [e.target[0].value]: {key: e.target[2].value.toLowerCase(), shape: parsedValue}}));
    }
 }
+
+function handleIR(e) {
+   let f = document.querySelector("input[type='file']#ir")
+   console.log(e)
+   if(f.files[0].type.indexOf('audio/') !== 0){
+      console.warn('not an audio file');
+      return;
+      }
+    const reader = new FileReader();
+    reader.onload = function(e){
+      var str = this.result;
+      // this is a string, so you can store it in localStorage, even if it's really not a good idea
+      console.log(str);
+      if (!f.value.replace(/.*[\/\\]/, '').includes(".wav")) {
+         alert("Wrong format or filename! IRs must be wav files!")
+         return;
+      }
+      console.log(f.value.replace(/.*[\/\\]/, '').replace(".wav",""))
+      console.log({...JSON.parse(localStorage.getItem("irs")), [f.value.replace(/.*[\/\\]/, '').replace(".wav","")]: str})
+      localStorage.setItem("irs",JSON.stringify({...JSON.parse(localStorage.getItem("irs")), [f.value.replace(/.*[\/\\]/, '').replace(".wav","")]: str}));
+      // const aud = new Audio(str);
+      // aud.play();
+      };
+    reader.readAsDataURL(f.files[0]);
+}
+
+let testarr = [testvar]
+
+useState(()=>{
+   console.log(testvar)
+   console.log("testarr:",testarr)
+   if (window&&document.querySelector("#testel")) {
+      let el = document.querySelector("#testel")
+      el.textContent=testarr[0];
+      console.log(testarr)
+   }
+},[testvar])
+
+// function resetIR(e) {
+   
+// }
 // let allowMicContext=()=>{};
 // let addDistortion=()=>{};
 // let changeDistortionValue=()=>{};
@@ -964,12 +1132,24 @@ function addChord(e) {
     <main className={styles.main}>
       <div className={[styles.description, 'center-block text-center m-2']} style={{lineHeight: '3rem', zIndex:1}}>
         <span>Simple guitar amp based on <h5><a href="https://tonejs.github.io/" target='blank'>tone js</a></h5></span>
-        {/* <span onClickCapture={()=>{setTestvar("b");console.log("change")}}>{testvar}</span> */}
+        <span onClickCapture={(e)=>{setTestvar("b");console.log("change")}} id="testel">{ testarr[0] }</span>
+      </div>
+      <div style={{zIndex: 10}}>
+         <label htmlFor="ir">Load an <a href="https://en.wikipedia.org/wiki/Impulse_response">Impulse Response</a> file (you can grab it from <a href="https://tonehunt.org/all?filter=ir">here</a> or some other place)</label><br/>
+         <input id="ir" type='file' onChangeCapture={(e)=>{console.log('ir');handleIR(e)}} accept="audio/*" style={{margin: "0.5rlh auto", display: "block"}}/>
+         <div style={{margin: "1rem auto"}}>
+            {/* <div id="ds-irs" style={{width: "100%", overflow: "auto",background: "#999999", border: "3px solid black", display: "block", }}>
+               <div style={{border: "3px solid black"}} onClick={resetIR()}>disconnect all irs</div>
+            </div> */}
+            <div id="irs" style={{width: "100%", overflow: "auto",background: "#999999", border: "3px solid black", display: "block", }}>
+
+            </div>
+         </div>
       </div>
       <EffectToggle style={{zIndex: 1}} label="Strict fretting" id="SF" checked={false} change={addSF} trueBypass={isSF} setTrueBypass={setIsSF}/>
-      <div style={{width: "5rem", height: "5rem", border: "3px solid black", background: "darkblue",zIndex: "10"}}>
-         <div style={{display: "block", marginLeft: "auto", marginRight: "auto", textAlign: "center"}} onClickCapture={(e)=>{setChordShapesShown(!chordShapesShown)}}>Chord shapes
-            <div> {/*  style={{display: chordShapesShown ? "block" : "none"}} */}
+      <div style={{width: "5rem", height: "5rem", border: "3px solid black", background: "#065691",zIndex: "10"}} onClickCapture={(e)=>{setChordShapesShown(!chordShapesShown)}}>
+         <div style={{display: "block", marginLeft: "auto", marginRight: "auto", textAlign: "center"}}>Chord shapes
+            <div style={{display: chordShapesShown ? "block" : "none"}}> {/*  style={{display: chordShapesShown ? "block" : "none"}} */}
                <div style={{overflow: "auto", width: "12rem", height: "12rem", background: "#999999", position: "relative", left: "50%", display: "grid", gridTemplateColumns: "1fr 1fr 1fr"}} id="DefaultChords">
                   {/* default chords */}
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,0,2,3])}}>C</div>
@@ -1010,7 +1190,8 @@ function addChord(e) {
       <EffectValue label="VolumeValue" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={0} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/> */}
       {/* transform: translateY(300px) rotate(315deg) !important; */}
       {/* only add triggers, not whole surface, but you should make strings move */}
-      <svg width="1000" height="900" transform='rotate(45)' style={{marginTop: "-15vh", marginBottom: "-15vh"}}><defs
+      <div id="guitar">
+      <svg viewBox='0 0 1000 900' id="guitarsvg" transform='rotate(45)' style={{marginTop: "-15vh", marginBottom: "-15vh", zIndex: "1"}}><defs
      id="defs6">
     <clipPath
        clipPathUnits="userSpaceOnUse"
@@ -2774,17 +2955,20 @@ function addChord(e) {
     </g>
   </g>
 </svg>
+</div>
 
       <button id='mic' onClickCapture={allowMicContext} style={{zIndex:1}}>Allow mic context</button>
-      <div className="center-block container">
+      <div className="center-block container" id="effects" style={{width: "80vw"}}>
         <h2 className='text-center my-3' style={{zIndex:1}}>Effects:</h2>
         <div className="row effect">
           <EffectToggle label="Volume" id="volume" checked={false} change={addVolume} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
-          <EffectValue label="VolumeValue" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={0} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
+          <EffectValue label="VolumeValue" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={-1000} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
         </div>
         <div className="row effect">
+          <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(distortion,-1)}}>↑</button>
           <EffectToggle label="Distortion" id="distortion" checked={false} change={addDistortion} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
           <EffectValue label="DistortionValue" id="distortionvalue" defaultValue={10} change={changeDistortionValue} min={0} max={10000} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
+          <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(distortion,1)}}>↓</button>
         </div>
         <div className="row effect">
           <EffectToggle label="Gain" id="gain" checked={false} change={addGain} trueBypass={isGain} setTrueBypass={setIsGain}/>
@@ -2795,10 +2979,12 @@ function addChord(e) {
           <EffectValue label="BitcrusherValue" id="bitcrushervalue" defaultValue={10} change={changeBitcrusherValue} min={1} max={16} trueBypass={isBitcrusher} setTrueBypass={setIsBitcrusher} strict={[1,1]}/>
         </div>
         <div className="row effect">
+        <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(chorus,-1)}}>↑</button>
           <EffectToggle label="Chorus" id="chorus" checked={false} change={addChorus} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
           <EffectValue label="ChorusFrequencyValue" id="chorusvalue" defaultValue={4} change={changeChorusFrequencyValue} min={0} max={15} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
           <EffectValue label="ChorusDelayTimeValue" id="chorusvalue" defaultValue={100} change={changeChorusDelayValue} min={0} max={250} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
           <EffectValue label="ChorusDepthValue" id="chorusvalue" defaultValue={0.2} change={changeChorusDepthValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
+          <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(chorus,1)}}>↓</button>
         </div>
         <div className="row effect">
           <EffectToggle label="Delay" id="delay" checked={false} change={addDelay} trueBypass={isDelay} setTrueBypass={setIsDelay}/>

@@ -1,0 +1,14 @@
+#synth {
+    position: relative;
+    width: 80vw;
+    height: 40vh;
+    margin: 0 auto;
+}
+
+#synthsvg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}

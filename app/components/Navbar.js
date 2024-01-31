@@ -6,7 +6,7 @@ export default function Navbar() {
     const pathname = usePathname()
 
     return (
-        <nav style={{display: 'fixed', position: 'absolute', top: '0', left: '0'}}>
+        <nav style={{display: 'fixed', top: '0', left: '0', position: "sticky", zIndex: "11"}}>
             <div className="navbar">
                 <Link href='/' className={pathname == '/' ? 'active' : ''}>Web amp</Link>
                 <Link href="/synth" className={pathname == '/synth' ? 'active' : ''}>Synth</Link>

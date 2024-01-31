@@ -150,14 +150,21 @@ useEffect(()=>{
 
   return (
     <main className={styles.main}>
+      <h5 className='m-4'>*Clearing browser's cache or sites' data will erase these settings</h5>
       <h2>Settings</h2>
       <div className={styles.description}>
-      please, write full name of key (if it is not one letter)
+        Please, write full name of key (if it is not one letter)
       </div>
       <h2>Key mapping</h2>
       <h3>Synth</h3>
+      <div className={styles.description}>
+        Sets a keyboard key that represents a synth key
+      </div>
       <div id="key-mapping-section"></div>
       <div id="controls-mapping-section">
+        <div className={styles.description}>
+          Sets a key to increase or decrease octave (leave it empty if you don't need it)
+        </div>
         <div className='m-1'>
           <label htmlFor='octave+'>Increase octave: </label>
           <input id="octave+" type='text' value={increaseOctaveKey} onChange={(e)=>{increaseOctave(e)}}/>
@@ -169,13 +176,25 @@ useEffect(()=>{
       </div>
       <h3>Guitar</h3>
       <div className='m-1'>
+        <div className={styles.description}>
+          Sets amount of strings on guitar (not implemented yet)
+        </div>
         <label htmlFor='strings'>Strings amount: </label>
         <input id="strings" type='number' value={stringsAmount} onChange={(e)=>{stringsChange(e)}}/>
       </div>
+      <div className={styles.description}>
+        Sets a keyboard key to play certian guitar string (also used in flageolets, fretting, strumming and some other features)
+      </div>
       <div id="strings-mapping-section"></div>
       <div className='m-1'>
+        <div className={styles.description}>
+          Sets amount of frets on guitar (not implemented yet)
+        </div>
         <label htmlFor='frets'>Frets amount: </label>
         <input id="frets" type='number' value={frettingKeysAmount} onChange={(e)=>{fretsChange(e)}}/>
+      </div>
+      <div className={styles.description}>
+        Sets a keyboard key to use certian guitar fret in flageolets, fretting, strumming and some other features
       </div>
       <div id="frets-mapping-section"></div>
     </main>

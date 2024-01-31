@@ -94,12 +94,12 @@ export default function History() {
         mouseOnImage.x = e.pageX - trackedImage.offsetParent.offsetLeft;
         mouseOnImage.y = e.pageY - trackedImage.offsetParent.offsetTop;
       });
-      window.addEventListener('resize', () => {
+      window.onresize = () => {
         actualImageSize.width = trackedImage.clientWidth;
         actualImageSize.height = trackedImage.clientHeight;
         characterDiv.style.width = `${trackedImage.clientWidth*characterMarkerSizePercentage}px`;
         characterDiv.style.height = `${trackedImage.clientWidth*characterMarkerSizePercentage}px`;
-      });
+      };
 
       window.onkeydown ??= (e)=>{started ? e.preventDefault() : null;console.log(e.keyCode);switch (e.keyCode) {case 70: requestFullscreen(!fullscreen);break; case 67: e.preventDefault();break; case 27: started = false;break;}};
 
@@ -587,7 +587,9 @@ export default function History() {
         el.id = EventName;
         el.onclick = () => {
           // !active_popups.includes(EventName) ? active_popups.push(EventName) : active_popups.splice(active_popups.indexOf(EventName), 1);
-          setPopups({...popups, [EventName]: {innerHTML: inner_popups[EventName].innerHTML,isActive: el.children[0].style.display == "none" ? true : false}})
+          // setPopups({...popups, [EventName]: {innerHTML: inner_popups[EventName].innerHTML,isActive: el.children[0].style.display == "none" ? true : false}})
+          setPopups({...popups, [EventName]: {innerHTML: inner_popups[EventName].innerHTML,isActive: el.children.length != 0 ? !el.children[0].open : !document.getElementById(EventName).children[0].open}})
+          // console.log("dialog is: ",el.children[0].open)
         };
         // active_popups.push(EventName);
         wrap.appendChild(el);
@@ -641,28 +643,36 @@ export default function History() {
           console.log(el);
           let cur = wrap.querySelector(`#${el}`);
           console.log("\ncur:\n ",cur);
-          if (!cur.querySelector(`div.popup-content`)) {
-            let item =  document.createElement("div");
+          if (!cur.querySelector(`dialog.popup-content`)) {
+            let item =  document.createElement("dialog");
             let trackedImage = wrap.querySelector("img");
             item.classList.add("popup-content");
             item.innerHTML = '<svg style="width: 20px; height:10px;position: relative; left: -10px; top: -10px"><polygon points="10,0 20,10 0,10"></polygon></svg>'+popups[el].innerHTML;
             console.log("inn: ",popups[el].innerHTML)
             // item.style.cssText = ``;
-            item.style.display = "block";
+            // item.style.display = "block";
+            item.show()
             item.style.position = "absolute";
             item.style.left = item.style.top = `${trackedImage.clientWidth*characterMarkerSizePercentage/4}px`;
             item.style.transform = "translateZ(-10px)";
+            item.show()
             // item.style.left = trackedImage.clientWidth*(Number(cur.getAttribute("y") - characterMarkerSizePercentage*0.5/2)*0.01);
             // item.style.top = trackedImage.clientHeight*(Number(cur.getAttribute("x") - characterMarkerSizePercentage*0.5/2)*0.01);
             
             cur.appendChild(item);
           } else {
-            let item = cur.querySelector(`div.popup-content`);
-            item.style.display = popups[el].isActive ? "block" : "none";
+            let item = cur.querySelector(`dialog.popup-content`);
+            // item.style.display = popups[el].isActive ? "block" : "none";
+            popups[el].isActive ? item.show() : item.close()
           }
         }
       }
     },[popups]);
+
+    useEffect(()=>()=>{
+      window.onresize = null;
+      window.onkeydown = null;      
+    },[])
 // const [octave, setOctave] = useState(); //init octave
 // console.log("initial octave: ", octave)
 // const [keysLength, setKeysLength] = useState();

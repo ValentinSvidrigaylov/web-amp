@@ -70,6 +70,8 @@
     --callout-border-rgb: 108, 108, 108;
     --card-rgb: 100, 100, 100;
     --card-border-rgb: 200, 200, 200;
+
+    --background: #242424;
   }
 }
 
@@ -93,7 +95,7 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb)); */
-  background-color: #242424 !important;
+  background-color: var(--background) !important;
 }
 
 input {
@@ -171,3 +173,108 @@ button {
 #distortion[checked] {
   color: red;
 }
+
+.arrow-sign {
+  width: 3ch !important;
+  margin: 1rlh auto !important;
+}
+
+::-webkit-scrollbar {
+  background-color: color-mix(in srgb, var(--background) 50%, black);
+   width: 0.75vw;
+  /* height: 1rlh; */
+}
+
+/* ::-webkit-scrollbar:horizontal {
+  height: 1vh;
+} */
+
+::-webkit-scrollbar-track {
+  background-color: color-mix(in srgb, var(--background) 80%, white);
+} 
+
+::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--background) 50%, white);
+  border-radius: 15px;  
+}
+
+::-webkit-scrollbar-corner {
+  background-color: color-mix(in srgb, var(--background) 90%, white);
+}
+
+/* Buttons */
+::-webkit-scrollbar-button:single-button {
+  background-color: #bbbbbb;
+  display: block;
+  border-style: solid;
+  height: 13px;
+  width: 16px;
+}
+/* Up */
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  border-width: 0 8px 8px 8px;
+  border-color: color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 40%, white) color-mix(in srgb, var(--background) 80%, white);
+}
+
+::-webkit-scrollbar-button:single-button:vertical:decrement:hover {
+  border-color: color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 30%, white) color-mix(in srgb, var(--background) 70%, white);
+}
+/* Down */
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  border-width: 8px 8px 0 8px;
+  border-color: color-mix(in srgb, var(--background) 40%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white);
+}
+
+::-webkit-scrollbar-button:vertical:single-button:increment:hover {
+  border-color: color-mix(in srgb, var(--background) 30%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white);
+}
+/* Right */
+::-webkit-scrollbar-button:single-button:horizontal:increment {
+  border-width: 8px 0 8px 8px;
+  border-color: color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 40%, white);
+}
+
+::-webkit-scrollbar-button:single-button:horizontal:increment:hover {
+  border-color: color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 30%, white);
+}
+/* Left */
+::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  border-width: 8px 8px 8px 0;
+  border-color: color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 40%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white);
+}
+
+::-webkit-scrollbar-button:single-button:horizontal:decrement:hover {
+  border-color: color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 30%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white);
+}
+
+.scaling-svg-container {
+  position: relative; 
+  height: 0; 
+  width: 100%; 
+  padding: 0;
+  padding-bottom: 100%; 
+  /* override this inline for aspect ratio other than square */
+ }
+ .scaling-svg {
+  position: absolute; 
+  height: 100%; 
+  width: 100%; 
+  left: 0; 
+  top: 0;
+ }
+
+ #guitar {
+  position: relative;
+  width: 80vw;
+  height: 80vh;
+  margin: 0 auto;
+ }
+ 
+ #guitarsvg {
+  position: absolute;
+  left: 0;
+  top: 15%;
+  width: 100%;
+  height: 100%;
+ }
+
