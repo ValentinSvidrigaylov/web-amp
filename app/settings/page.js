@@ -150,7 +150,7 @@ useEffect(()=>{
 
   return (
     <main className={styles.main}>
-      <h5 className='m-4'>*Clearing browser's cache or sites' data will erase these settings</h5>
+      <h5 className='m-4'>*Clearing browser&apos;s cache or sites&apos; data will erase these settings</h5>
       <h2>Settings</h2>
       <div className={styles.description}>
         Please, write full name of key (if it is not one letter)
@@ -163,7 +163,7 @@ useEffect(()=>{
       <div id="key-mapping-section"></div>
       <div id="controls-mapping-section">
         <div className={styles.description}>
-          Sets a key to increase or decrease octave (leave it empty if you don't need it)
+          Sets a key to increase or decrease octave (leave it empty if you don&apos;t need it)
         </div>
         <div className='m-1'>
           <label htmlFor='octave+'>Increase octave: </label>

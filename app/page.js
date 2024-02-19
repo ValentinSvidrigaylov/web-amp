@@ -21,8 +21,9 @@ var map = {};
 export default function Home(props) {
 let pb_changed = false;
 
+Tone.UserMedia.debug = true
 Tone.context.lookAhead = 0;
-
+console.log(Tone.UserMedia.debug)
 const [mic, setMic] = useState();
 
 const [testvar, setTestvar] = useState("a");
@@ -55,7 +56,10 @@ const [reverb, setReverb] = useState() //memory leaks because of this value
 const [isReverb, setIsReverb] = useState(false)
 const [pitchshifter, setPitchShifter] = useState() //memory leaks because of this value
 const [isPitchShifter, setIsPitchShifter] = useState(false)
-let effects = [[volume,isVolume],[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb], [pitchshifter, isPitchShifter]];
+
+const [current_ir, setcurrent_ir] = useState()
+const [iscurrent_ir, setiscurrent_ir] = useState(false)
+let effects = [[volume,isVolume],[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb], [pitchshifter, isPitchShifter], [current_ir, iscurrent_ir]];
 const _start_effects = [[volume,isVolume],[distortion, isDistortion], [gain, isGain], [bitcrusher, isBitcrusher], [chorus, isChorus], [delay, isDelay], [reverb, isReverb], [pitchshifter, isPitchShifter]];
 
 
@@ -72,35 +76,39 @@ const [pitchBinding, setPitchBinding] = useState([...guitarTuning]);
 const [scaleLength, setScaleLength] = useState(647.7);
 
 useEffect(()=>{
-  setMic(new Tone.UserMedia().toDestination());
-  setGuitar(new Tone.Sampler({urls: {"C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3",}, release: 1, baseUrl: "./samples/guitar-electric/"}).toDestination());
-  setVolume(new Tone.Volume(10).toDestination());
-  setDistortion(new Tone.Distortion(10).toDestination())
-  setGain(new Tone.Gain(250).toDestination())
-  setBitcrusher(new Tone.BitCrusher(8).toDestination())
-  setChorus(new Tone.Chorus(4,2.5,1).toDestination().start())
-  setDelay(new Tone.FeedbackDelay("8n", .8).toDestination())
-  setReverb(new Tone.Reverb(30).toDestination())
-  setPitchShifter(new Tone.PitchShift({pitch: 0, wet: 0.99}).toDestination())
+  //default values must be the same as here, otherwise effect will be different from the one that is displayed
+  setMic(new Tone.UserMedia());
+  setGuitar(new Tone.Sampler({urls: {"C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3",}, release: 1, baseUrl: "./samples/guitar-electric/"}).chain(new Tone.Mono(), Tone.Destination));
+  setVolume(new Tone.Volume(10));
+  setDistortion(new Tone.Distortion(10))
+  setGain(new Tone.Gain(250))
+  setBitcrusher(new Tone.BitCrusher({bits: 8, wet: 1}))
+  setChorus(new Tone.Chorus({frequency: 4, delayTime: 2.5, depth: 1, wet: 1}).start())
+  setDelay(new Tone.FeedbackDelay({delayTime: "8n", feedback: .1, wet: 1}))
+  setReverb(new Tone.Reverb(30))
+  setPitchShifter(new Tone.PitchShift({pitch: -12, wet: 1}))
 },[]);
 
 useEffect(()=>{
-   if (mic) {
-      mic.output = new Tone.Mono().toDestination();
+   if (mic && typeof mic == Tone.UserMedia) {
+      mic.output = new Tone.Mono();
+      mic.debug = true
+      mic.start()
       console.log(mic)
    }
 },[mic])
 
-useEffect(()=>{
-  if (typeof bitcrusher == Tone.BitCrusher) {
-    bitcrusher.wet.value = 1;
-  }
-},[bitcrusher])
+// useEffect(()=>{
+//   if (typeof bitcrusher == Tone.BitCrusher) {
+//     bitcrusher.wet.value = 1;
+//   }
+// },[bitcrusher])
 
 // useEffect(()=>{
 //    if (typeof pitchshifter == Tone.PitchShift) {
 //      pitchshifter.wet.value = 1;
 //    }
+//    console.log(pitchshifter)
 //  },[pitchshifter])
 //setInterval(() => console.log(meter.getValue()), 100);
 // const vol = new Tone.Volume(-120000000).toDestination();
@@ -135,53 +143,6 @@ function allowMicContext() {
 //split guitar and mic effects
 //flageolets and other guitar techiques
 
-function toggleEffect(value, effect) {
-mic.open()
-Tone.start()
-if (value) { //wrong sequencing here
-  console.log('triggered');
-  //add sequencing here
-  //mic.connect(gain).toDestination();
-  //mic.connect(meter).connect(vargain).connect(vol).toDestination();
-  // console.log(gain.gain)
-   //   let amount=1
-   //   effects.move(effects.map((e)=>e[0]).indexOf(effect),effects.map((e)=>e[0]).indexOf(effect)+amount);
-  let mapped = [...effects.map((e)=>e[0] == effect ? (()=>{let t = e;e[1]=true;return e})() : (()=>{let t = e;e[1]=e[1];return e})()).filter((e)=>e[1])].map((e)=>e[0])
-  console.log(mapped)
-  console.log(effects)
-//   new Tone.Mono(mic.connect(effect).toDestination()).toDestination();
-//   guitar.connect(effect).toDestination();
-// mic.chain(...[new Tone.Distortion(100).toDestination(), new Tone.Delay(0.6).toDestination()].reverse()).toDestination()
-// console.log([new Tone.Distortion(100).toDestination(), new Tone.Delay(0.6).toDestination()].reverse())
-// mic.disconnect().chain(...[...mapped].reverse()).toDestination()
-// console.log(mapped.reverse())
-  mic.disconnect().toDestination().chain(...[...mapped]).toDestination();
-//   guitar.disconnect().toDestination().chain(...[...mapped].toReversed()).toDestination();
-  // let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
-  // console.log(mapped)
-  //console.log(effects[1][1]);
-  //[...a.filter((e)=>e[1])].map((e)=>e[0])
-  //let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
-  //console.log(mapped)
-  //mic.chain().toDestination();
-  //setTimeout(()=>{mic.disconnect(vargain)},5000)
-  //mic.connect(bitcrusher).toDestination();
-  //mic = new Tone.UserMedia().connect(meter).connect(vargain).connect(vol).toDestination();
-} else {
-  console.log('disconnected')
-  //mic.disconnect(meter).disconnect(vargain).disconnect(vol).toDestination();
-  let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
-  console.log(mapped)
-  mapped = mapped.filter((e)=>e!=effect)
-  console.log(mapped)
-  mic.disconnect().toDestination().chain(...[...mapped]).toDestination();
-//   guitar.disconnect().toDestination().chain(...[...mapped].toReversed()).toDestination();
-  //mic.disconnect(vargain).disconnect(vol).toDestination();
-  //mic.close()
-  //mic = new Tone.UserMedia().toDestination();
-}
-}
-
 function handlePositionChange(effect, amount) {
    //works but fails when in reverse
    mic.open()
@@ -197,6 +158,8 @@ function handlePositionChange(effect, amount) {
    console.log("eq2:", t0===effects[0])
    console.log(t)
    console.log(effects[2])
+   console.log("eq: ",t[0]===effects[2][0])
+   console.log("eq2:", t0[0]===effects[0][0])
    // console.log(t.toReversed())
    // console.log(mapped.map(e=>e instanceof Tone.ToneAudioNode))
    // console.log(mapped.map(e=>isAnyAudioNode(e)))
@@ -214,24 +177,221 @@ function handlePositionChange(effect, amount) {
    //mic.disconnect().toDestination().chain(...[...mapped]).toDestination();
    //tested on ons and offs, fails after three effects are connected and one of them disconnects: connects with different shape, with fan connection this doesnt seem to happend but all effects that were before current are on
    //all fails when effects array mutates since nodes are not exactly the same
-   console.log(mapped[0])
-   console.log(effects.filter((e)=>e[1]).map((e)=>e[0].toDestination()))
-   mic.disconnect().toDestination().chain(...mapped).toDestination();
-   // mic.disconnect().chain(new Tone.PitchShift(12).toDestination()).toDestination();
-   // guitar.disconnect().toDestination().chain(...[...mapped]).toDestination();
+//    console.log(mapped[0])
+//    console.log(mapped)
+//    console.log(effects.filter((e)=>e[1]).map((e)=>e[0].toDestination()))
+//    // mic.disconnect().chain(...mapped).toDestination();
+//    let tt = [new Tone.Distortion(10).toDestination(), new Tone.FeedbackDelay(0.6).toDestination()]
+//    mic.disconnect().chain(...tt).toDestination();
+//    guitar.disconnect().chain(...tt).toDestination();
+//    function moved(arro, old_index, new_index) {
+//       let arr = [...arro]
+//       while (old_index < 0) {
+//           old_index += arr.length;
+//       }
+//       while (new_index < 0) {
+//           new_index += arr.length;
+//       }
+//       if (new_index >= arr.length) {
+//           var k = new_index - arr.length + 1;
+//           while (k--) {
+//               arr.push(undefined);
+//           }
+//       }
+//       arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
+//       console.log(arr)
+//       console.log(arro)
+//       return arr; // for testing purposes
+//   };
+//    tt.move(0,1)
+//    // tt.pop();
+//    // tt.push(reverb)
+//    // tt.splice(0, 0, tt.splice(1, 1)[0]);
+
+//    // mic.disconnect().chain(...moved(tt,0,1), Tone.Destination)
+//    // let a = [1,2,3];
+//    // [a[0],a[1]]=[a[1],a[0]]
+//    // console.log(a) 
+
+//    // tt.insert(tt[0],1)
+//    // tt.shift()
+//    console.log(tt)
+//    guitar.disconnect().chain(...tt).toDestination()
+mic.open()
+    let tt = [new Tone.Distortion(10), new Tone.Gain(100)]
+    mic.disconnect().chain(...tt, Tone.Destination);
+    function moved(arro, old_index, new_index) {
+        let arr = [...arro]
+        while (old_index < 0) {
+            old_index += arr.length;
+        }
+        while (new_index < 0) {
+            new_index += arr.length;
+        }
+        if (new_index >= arr.length) {
+            var k = new_index - arr.length + 1;
+            while (k--) {
+                arr.push(undefined);
+            }
+        }
+        arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
+        console.log(arr)
+        console.log(arro)
+        return arr; // for testing purposes
+    };
+
+    console.log(tt)
+    mic.disconnect().chain(...moved(tt,0,1), Tone.Destination)
+// let tt = [new Tone.Distortion(10), new Tone.FeedbackDelay(0.6)]
+//    mic.disconnect().chain(...tt, Tone.Destination);
+//    function moved(arro, old_index, new_index) {
+//       let arr = [...arro]
+//       while (old_index < 0) {
+//           old_index += arr.length;
+//       }
+//       while (new_index < 0) {
+//           new_index += arr.length;
+//       }
+//       if (new_index >= arr.length) {
+//           var k = new_index - arr.length + 1;
+//           while (k--) {
+//               arr.push(undefined);
+//           }
+//       }
+//       arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
+//       console.log(arr)
+//       console.log(arro)
+//       return arr; // for testing purposes
+//   };
+// //    tt.move(0,1)
+//    // tt.pop();
+//    // tt.push(reverb)
+//    // tt.splice(0, 0, tt.splice(1, 1)[0]);
+
+//    // mic.disconnect().chain(...moved(tt,0,1), Tone.Destination)
+//    // let a = [1,2,3];
+//    // [a[0],a[1]]=[a[1],a[0]]
+//    // console.log(a) 
+
+//    // tt.insert(tt[0],1) 
+//    // tt.shift()
+//    console.log(tt)
+//    mic.disconnect().chain(...moved(tt,0,1), Tone.Destination)
+//    // mic.disconnect().chain(new Tone.PitchShift(12).toDestination()).toDestination();
+//    // guitar.disconnect().chain(...[...mapped]).toDestination();
+//    // let value = effects.map(e=>e[0])
+//    // console.log(effects[value.indexOf(effect)][1])
+//    // let effectId = value.indexOf(effect);
+//    // let effects_outer = document.getElementById("effects")
+//    // let allEffects = effects_outer.children;
+//    // let src = allEffects[effectId]
+//    // let src_index = [...allEffects].move(effectId,effectId+amount).indexOf(src)
+//    // let dest = allEffects[effectId+amount]
+
+   // let m_array = [...allEffects].toMoved(effectId,effectId+amount)
+   // console.log(m_array)
+   // effects_outer.innerHTML=''
+   // for (let i of m_array) {
+   //    effects_outer.appendChild(i)
+   // }
+   // toggleEffect(effectId, effect)
  }
- 
- function changeEffectVal(newVal,oldVal) {
+
+function toggleEffect(value, effect) {
+mic.open()
+Tone.start()
+if (value) { //wrong sequencing here
+  console.log('triggered');
+  //add sequencing here
+  //mic.connect(gain).toDestination();
+  //mic.connect(meter).connect(vargain).connect(vol).toDestination();
+  // console.log(gain.gain)
+   //   let amount=1
+   //   effects.move(effects.map((e)=>e[0]).indexOf(effect),effects.map((e)=>e[0]).indexOf(effect)+amount);
+  let mapped = [...effects.filter((e)=>e[1]||e[0]==effect)].map((e)=>e[0])
+  console.log(effects)
+//   new Tone.Mono(mic.connect(effect).toDestination()).toDestination();
+//   guitar.connect(effect).toDestination();
+// mic.chain(...[new Tone.Distortion(100).toDestination(), new Tone.Delay(0.6).toDestination()].reverse()).toDestination()
+// console.log([new Tone.Distortion(100).toDestination(), new Tone.Delay(0.6).toDestination()].reverse())
+// mic.disconnect().chain(...[...mapped].reverse()).toDestination()
+// console.log(mapped.reverse())
+   // if (current_ir != undefined) {
+   //    mapped.push(new Tone.Convolver(current_ir))
+   // }  
+   console.log(mapped)
+  mic.disconnect().chain(...mapped, new Tone.Mono(), Tone.Destination)
+  guitar.disconnect().chain(...mapped, new Tone.Mono(), Tone.Destination)
+  // let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+  // console.log(mapped)
+  //console.log(effects[1][1]);
+  //[...a.filter((e)=>e[1])].map((e)=>e[0])
+  //let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+  //console.log(mapped)
+  //mic.chain().toDestination();
+  //setTimeout(()=>{mic.disconnect(vargain)},5000)
+  //mic.connect(bitcrusher).toDestination();
+  //mic = new Tone.UserMedia().connect(meter).connect(vargain).connect(vol).toDestination();
+} else {
+  console.log('disconnected')
+  //mic.disconnect(meter).disconnect(vargain).disconnect(vol).toDestination();
+//   let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+let mapped = [...effects.map((e)=>e[0] == effect ? (()=>{let t = e;e[1]=false;return e})() : (()=>e)()).filter((e)=>e[1])].map((e)=>e[0])
+  console.log(mapped)
+//   mapped = mapped.filter((e)=>e!=effect)
+  console.log()
+//   if (current_ir != undefined) {
+//       mapped.push(new Tone.Convolver(current_ir))
+//    }
+   console.log(mapped)
+  mic.disconnect().chain(...mapped, new Tone.Mono(), Tone.Destination);
+  guitar.disconnect().chain(...mapped, new Tone.Mono(), Tone.Destination);
+  //mic.disconnect(vargain).disconnect(vol).toDestination();
+  //mic.close()
+  //mic = new Tone.UserMedia().toDestination();
+}
+}
+
+// //this function probably mutates value because link is not the same or smth
+// //  function changeEffectVal(newVal,oldVal) {
+// function changeEffectVal(property, value, object) {
+//    mic.open()
+//    Tone.start()
+//    // let newEffectVal = newVal.toDestination();
+//    object[property] = value;
+//    let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+//    console.log(mapped)
+//    // mapped = mapped.filter((e)=>e!=object)
+//    // console.log(mapped)
+//    //console.log('err')
+//    // mic.disconnect().chain(...[...mapped, newEffectVal]).toDestination();
+//    mic.disconnect().chain(...mapped).toDestination();
+//    // guitar.disconnect().chain(...[...mapped, newEffectVal]).toDestination();
+//    guitar.disconnect().chain(...mapped).toDestination();
+// }
+
+//this function probably mutates value because link is not the same or smth
+function changeEffectVal(newVal,oldVal) {
    mic.open()
    Tone.start()
-   let newEffectVal = newVal.toDestination();
+   let newEffectVal = newVal;
    let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+   // let effectIndex = mapped.indexOf(oldVal)
+   // console.log(mapped)
+   // mapped = mapped.filter((e)=>e!=oldVal)
+   console.log(mapped.indexOf(oldVal))
    console.log(mapped)
-   mapped = mapped.filter((e)=>e!=oldVal)
+   console.log(mapped[mapped.indexOf(oldVal)])
+   console.log(mapped.indexOf(oldVal))
+   effects[mapped.indexOf(oldVal)][0]=newEffectVal
+   mapped[mapped.indexOf(oldVal)]=newEffectVal
    console.log(mapped)
    //console.log('err')
-   mic.disconnect().chain(...[...mapped, newEffectVal]).toDestination();
-   guitar.disconnect().chain(...[...mapped, newEffectVal]).toDestination();
+   // if (current_ir != undefined) {
+   //    mapped.push(new Tone.Convolver(current_ir))
+   // }
+   mic.disconnect().chain(...mapped, new Tone.Mono(), Tone.Destination);
+   guitar.disconnect().chain(...mapped, new Tone.Mono(), Tone.Destination);
 }
 
 function addVolume(value) {
@@ -241,7 +401,7 @@ function addVolume(value) {
 
 function changeVolumeValue(value) {
    // console.log(`changed to ${value}!`)
-   setVolume(new Tone.Volume(Math.round(value)).toDestination());
+   setVolume(new Tone.Volume(Math.round(value)));
    changeEffectVal(new Tone.Volume(Math.round(value)), volume);
 }
 
@@ -262,7 +422,7 @@ function addDistortion(value) {
 
 function changeDistortionValue(value) {
   console.log(`changed to ${value}!`)
-  setDistortion(new Tone.Distortion(value).toDestination());
+  setDistortion(new Tone.Distortion(value));
   changeEffectVal(new Tone.Distortion(value), distortion);
   // mic.disconnect(distortion).connect(new Tone.Distortion(value)).toDestination();
 }
@@ -314,7 +474,7 @@ function changeGainValue(value) {
   //mic.open()
   //Tone.start()
   console.log(`changed to ${value}!`)
-  setGain(new Tone.Gain(value).toDestination());
+  setGain(new Tone.Gain(value));
   changeEffectVal(new Tone.Gain(value), gain);
   //mic.disconnect(gain).connect(new Tone.Gain(value)).toDestination();
   // let newGain = new Tone.Gain(value).toDestination();
@@ -328,8 +488,8 @@ function changeGainValue(value) {
 }
 
 function changeBitcrusherValue(value) {
-  let newVal = new Tone.BitCrusher(value).toDestination();
-  bitcrusher.wet.value = 1;
+  let newVal = new Tone.BitCrusher({bits: value, wet: 1});
+//   bitcrusher.wet.value = 1;
   setBitcrusher(newVal);
   changeEffectVal(newVal);
 }
@@ -348,25 +508,34 @@ function addChorus(value) {
 }
 
 function changeChorusFrequencyValue(value) {
-  // mic.open()
-  // Tone.start()
-  console.log('changed!')
-  setChorus(new Tone.Chorus(value, chorus.delayTime, chorus.depth).toDestination().start());  
-  changeEffectVal(new Tone.Chorus(value, chorus.delayTime, chorus.depth).start(), chorus);
-  //mic.disconnect(gain).connect(new Tone.Gain(value)).toDestination();
-  // mic.disconnect().toDestination();
+   let effect = new Tone.Chorus({frequency: Number(value), delayTime: chorus.delayTime, depth: chorus.depth, wet: chorus.wet.value}).start();
+   // mic.open()
+   // Tone.start()
+   console.log('changed!');
+   setChorus(effect);
+   changeEffectVal(effect, chorus);
+   //mic.disconnect(gain).connect(new Tone.Gain(value)).toDestination();
+   // mic.disconnect().toDestination();
 }
 
 function changeChorusDelayValue(value) {
-  console.log('changed!')
-  setChorus(new Tone.Chorus(chorus.frequency.value, value, chorus.depth).toDestination().start());  
-  changeEffectVal(new Tone.Chorus(chorus.frequency.value, value, chorus.depth).start(), chorus);
+   let effect = new Tone.Chorus({frequency: chorus.frequency.value, delayTime: Number(value), depth: chorus.depth, wet: chorus.wet.value}).start();
+   console.log('changed!');
+   setChorus(effect);
+   changeEffectVal(effect, chorus);
 }
 
 function changeChorusDepthValue(value) {
-  console.log('changed!')
-  setChorus(new Tone.Chorus(chorus.frequency.value, chorus.delayTime, value).toDestination().start());  
-  changeEffectVal(new Tone.Chorus(chorus.frequency.value, chorus.delayTime, value).start(), chorus);
+   let effect = new Tone.Chorus({frequency: chorus.frequency.value, delayTime: chorus.delayTime, depth: Number(value), wet: chorus.wet.value}).start();
+   console.log('changed!');
+   setChorus(effect);
+   changeEffectVal(effect, chorus);
+}
+
+function changeChorusWetValue(value) {
+   let effect = new Tone.Chorus({frequency: chorus.frequency.value, delayTime: chorus.delayTime, depth: chorus.depth, wet: Number(value)}).start();
+   setChorus(effect);
+   changeEffectVal(effect, chorus);
 }
 
 function addDelay(value) {
@@ -376,8 +545,8 @@ function addDelay(value) {
 
 function changeDelayValue(value) {
   console.log('changed!')
-  setDelay(new Tone.FeedbackDelay("8n", value).toDestination());
-  changeEffectVal(new Tone.FeedbackDelay("8n", value), delay);
+  setDelay(new Tone.FeedbackDelay({delayTime: "8n", feedback: value, wet: 1}));
+  changeEffectVal(new Tone.FeedbackDelay({delayTime: "8n", feedback: value, wet: 1}), delay);
 }
 
 function addReverb(value) {
@@ -388,18 +557,28 @@ function addReverb(value) {
 function changeReverbValue(value) {
   console.log('changed!')
   console.log(Number(value));
-  setReverb(new Tone.Reverb(Number(value)).toDestination()); 
+  setReverb(new Tone.Reverb(Number(value))); 
   changeEffectVal(new Tone.Reverb(Number(value)), reverb);
 }
 
 function addPitchShifter(value) {
    setIsPitchShifter(value);
    toggleEffect(value, pitchshifter);  
+   console.log(pitchshifter)
  }
  
  function changePitchShifterValue(value) {
-   setPitchShifter(new Tone.PitchShift({pitch: Number(value), wet: 0.99}).toDestination()); 
-   changeEffectVal(new Tone.PitchShift({pitch: Number(value), wet: 0.99}), pitchshifter);
+   console.log(pitchshifter.wet.value)
+   setPitchShifter(new Tone.PitchShift({pitch: Number(value), wet: pitchshifter.wet.value})); 
+   changeEffectVal(new Tone.PitchShift({pitch: Number(value), wet: pitchshifter.wet.value}), pitchshifter);
+   console.log(pitchshifter)
+ }
+ 
+ function changePitchShifterWetValue(value) {
+   console.log(pitchshifter.pitch)
+   console.log(Number(value))
+   setPitchShifter(new Tone.PitchShift({pitch: pitchshifter.pitch, wet: Number(value)})); 
+   changeEffectVal(new Tone.PitchShift({pitch: pitchshifter.pitch, wet: Number(value)}), pitchshifter);
  }
 
 const fret_width = 10;
@@ -959,7 +1138,93 @@ window.onkeyup = (e)=>{
    }
 }
 
-let current_ir;
+// let current_ir;
+
+function renderIRs() {
+   {
+      //IRs section
+      let irsJSON = JSON.parse(localStorage.getItem("irs")) || function(){localStorage.setItem('irs', JSON.stringify({}));return {}}();
+      let outer = document.getElementById("irs");
+      let irs = irsJSON
+      outer.innerHTML=''
+      console.log("irs: ",irs)
+
+      let reset = document.createElement("div");
+      reset.id = "resetir"
+      reset.onclick = () => {//console.log(mic);mic.open();Tone.start(); let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
+         setiscurrent_ir(false);
+         setcurrent_ir();
+         // toggleEffect(0,current_ir);
+         // console.log(mapped)
+         // mapped = mapped.filter((e)=>e!=effect)
+         // console.log(mapped)
+         // mic.disconnect().chain(...[...mapped], new Tone.Mono(), Tone.Destination);
+         // guitar.disconnect().chain(...[...mapped], new Tone.Mono(), Tone.Destination);
+         // if (current_ir) {
+         //    console.log("\n\n\n")
+         //    console.log(current_ir)
+         //    toggleEffect(0,new Tone.Convolver(current_ir))
+         //    current_ir=undefined
+         // }
+      };
+      reset.style.border = "3px solid black";
+      reset.textContent = "reset current IR"
+      outer.appendChild(reset)
+
+
+      for (let e in irs) {
+         let el = document.createElement("div");
+         // console.log(irs[e])
+         // current_ir = irs[e];
+         el.onclick = () => {console.log(irs[e]);
+            console.log(mic);
+            setiscurrent_ir(true);
+            setcurrent_ir(new Tone.Convolver(irs[e]));
+            // toggleEffect(1,current_ir)
+         } //mic.disconnect(current_ir);guitar.disconnect(current_ir)};current_ir=irs[e];toggleEffect(0,new Tone.Convolver(irs[e]))
+         el.style.cssText = "border: 3px solid black; display: flex; flex-direction: row; justify-content: space-between"
+         el.textContent = e;
+         let deleteIR = document.createElement("div");
+         deleteIR.textContent = "x";
+         deleteIR.style.cssText = "background: red; height: 3ch; width: 3ch; text-align: center; border-left: 2px solid black; cursor: pointer"
+         deleteIR.onclick = () => {let newIRs = JSON.parse(localStorage.getItem("irs")); delete newIRs[e]; localStorage.setItem("irs", JSON.stringify(newIRs));renderIRs()};
+         el.appendChild(deleteIR);
+         outer.appendChild(el)
+      }
+   }
+}
+
+useEffect(()=>{
+   console.log(current_ir)
+   console.log(window.document.readyState)
+   console.log(document.getElementById("resetir"))
+   if (document.readyState === 'complete'&&document.getElementById("resetir")&&mic!=undefined) {
+      console.log("current_ir update")
+      toggleEffect(iscurrent_ir, current_ir)
+   }
+},[current_ir, iscurrent_ir])
+
+function renderChords() {
+   {
+      //Chords section
+      let chordsJSON = JSON.parse(localStorage.getItem("chords")) || function(){localStorage.setItem('chords', JSON.stringify({}));return {}}();
+      let outer = document.getElementById("Chords");
+      let chords = chordsJSON
+      outer.innerHTML=''
+      for (let e in chords) {
+         let el = document.createElement("div");
+         el.onclick = () => {setChordShape(chords[e].shape)};
+         el.style.border = "3px solid black";
+         el.textContent = e
+         let deleteChord = document.createElement("div");
+         deleteChord.textContent = "x";
+         deleteChord.style.cssText = "background: red; height: 3ch; width: 100%; text-align: center; border-left: 2px solid black; cursor: pointer; word-break: break-all;"
+         deleteChord.onclick = () => {let newChords = JSON.parse(localStorage.getItem("chords")); delete newChords[e]; localStorage.setItem("chords", JSON.stringify(newChords));renderChords()};
+         el.appendChild(deleteChord);
+         outer.appendChild(el)
+      }
+   }
+}
 
 useEffect(()=>{
    if (window) {
@@ -996,51 +1261,8 @@ useEffect(()=>{
       //    //<button className='center-block p-0 arrow-sign' onClickCapture={handlePositionChange(distortion,1)}>↓</button>
       // }
 
-      {
-         //IRs section
-         let irsJSON = JSON.parse(localStorage.getItem("irs")) || function(){localStorage.setItem('irs', JSON.stringify({}));return {}}();
-         let outer = document.getElementById("irs");
-         let irs = irsJSON
-         outer.innerHTML=''
-         console.log("irs: ",irs)
-
-         let reset = document.createElement("div");
-         reset.onclick = () => {console.log(mic);mic.open();Tone.start(); let mapped = [...effects.filter((e)=>e[1])].map((e)=>e[0]);
-            console.log(mapped)
-            // mapped = mapped.filter((e)=>e!=effect)
-            // console.log(mapped)
-            mic.disconnect().chain(...[...mapped]).toDestination();
-            guitar.disconnect().chain(...[...mapped]).toDestination(); current_ir=undefined};
-         reset.style.border = "3px solid black";
-         reset.textContent = "reset current IR"
-         outer.appendChild(reset)
-
-
-         for (let e in irs) {
-            let el = document.createElement("div");
-            // console.log(irs[e])
-            el.onclick = () => {console.log(irs[e]);console.log(mic);mic.open();Tone.start(); if (current_ir!=undefined) {mic.disconnect(current_ir);guitar.disconnect(current_ir)};mic.connect(new Tone.Convolver(irs[e]).toDestination()).toDestination();guitar.connect(new Tone.Convolver(irs[e]).toDestination()).toDestination();current_ir=irs[e]};
-            current_ir = irs[e]
-            el.style.border = "3px solid black";
-            el.textContent = e
-            outer.appendChild(el)
-         }
-      }
-
-      {
-         //Chords section
-         let chordsJSON = JSON.parse(localStorage.getItem("chords")) || function(){localStorage.setItem('chords', JSON.stringify({}));return {}}();
-         let outer = document.getElementById("Chords");
-         let chords = chordsJSON
-         outer.innerHTML=''
-         for (let e in chords) {
-            let el = document.createElement("div");
-            el.onclick = () => {setChordShape(chords[e].shape)};
-            el.style.border = "3px solid black";
-            el.textContent = e
-            outer.appendChild(el)
-         }
-      }
+      renderIRs();
+      renderChords();
    }
 },[mic])
 
@@ -1074,6 +1296,7 @@ function addChord(e) {
       console.log(parsedValue)
       parsedValue && localStorage.getItem("chords") && JSON.parse(localStorage.getItem("chords"))[e.target[0].value] ? (confirm(`Replace existing chord with this name? (${e.target[0].value})`) && localStorage.setItem("chords", JSON.stringify({...JSON.parse(localStorage.getItem("chords")), [e.target[0].value]: {key: e.target[2].value, shape: parsedValue}}))) : localStorage.setItem("chords", JSON.stringify({...JSON.parse(localStorage.getItem("chords")), [e.target[0].value]: {key: e.target[2].value.toLowerCase(), shape: parsedValue}}));
    }
+   renderChords();
 }
 
 function handleIR(e) {
@@ -1095,6 +1318,7 @@ function handleIR(e) {
       console.log(f.value.replace(/.*[\/\\]/, '').replace(".wav",""))
       console.log({...JSON.parse(localStorage.getItem("irs")), [f.value.replace(/.*[\/\\]/, '').replace(".wav","")]: str})
       localStorage.setItem("irs",JSON.stringify({...JSON.parse(localStorage.getItem("irs")), [f.value.replace(/.*[\/\\]/, '').replace(".wav","")]: str}));
+      renderIRs();
       // const aud = new Audio(str);
       // aud.play();
       };
@@ -1110,9 +1334,15 @@ useState(()=>{
       let el = document.querySelector("#testel")
       el.textContent=testarr[0];
       console.log(testarr)
+      el.onClickCapture = (e) => {e.target.textContent="qwed"}
    }
 },[testvar])
 
+function testFunction() {
+   setTestvar("b");
+   console.log(testarr)
+   console.log("change")
+}
 // function resetIR(e) {
    
 // }
@@ -1132,11 +1362,12 @@ useState(()=>{
     <main className={styles.main}>
       <div className={[styles.description, 'center-block text-center m-2']} style={{lineHeight: '3rem', zIndex:1}}>
         <span>Simple guitar amp based on <h5><a href="https://tonejs.github.io/" target='blank'>tone js</a></h5></span>
-        <span onClickCapture={(e)=>{setTestvar("b");console.log("change")}} id="testel">{ testarr[0] }</span>
+        <span onClickCapture={testFunction} id="testel">{ testarr[0] }</span>
       </div>
       <div style={{zIndex: 10}}>
          <label htmlFor="ir">Load an <a href="https://en.wikipedia.org/wiki/Impulse_response">Impulse Response</a> file (you can grab it from <a href="https://tonehunt.org/all?filter=ir">here</a> or some other place)</label><br/>
-         <input id="ir" type='file' onChangeCapture={(e)=>{console.log('ir');handleIR(e)}} accept="audio/*" style={{margin: "0.5rlh auto", display: "block"}}/>
+         <span>*be sure to reset your ir before playing because when you change or turn on and off any effect, ir is gaining</span><br/>
+         <input id="ir" type='file' onChangeCapture={(e)=>{console.log('ir');handleIR(e);}} accept="audio/*" style={{margin: "0.5rlh auto", display: "block"}}/>
          <div style={{margin: "1rem auto"}}>
             {/* <div id="ds-irs" style={{width: "100%", overflow: "auto",background: "#999999", border: "3px solid black", display: "block", }}>
                <div style={{border: "3px solid black"}} onClick={resetIR()}>disconnect all irs</div>
@@ -2958,8 +3189,8 @@ useState(()=>{
 </div>
 
       <button id='mic' onClickCapture={allowMicContext} style={{zIndex:1}}>Allow mic context</button>
-      <div className="center-block container" id="effects" style={{width: "80vw"}}>
-        <h2 className='text-center my-3' style={{zIndex:1}}>Effects:</h2>
+      <h2 className='text-center my-3' style={{zIndex:1}}>Effects:</h2>
+      <div className="center-block container" id="effects" style={{width: "80vw"}} effects={effects}>
         <div className="row effect">
           <EffectToggle label="Volume" id="volume" checked={false} change={addVolume} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
           <EffectValue label="VolumeValue" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={-1000} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
@@ -2982,13 +3213,15 @@ useState(()=>{
         <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(chorus,-1)}}>↑</button>
           <EffectToggle label="Chorus" id="chorus" checked={false} change={addChorus} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
           <EffectValue label="ChorusFrequencyValue" id="chorusvalue" defaultValue={4} change={changeChorusFrequencyValue} min={0} max={15} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
-          <EffectValue label="ChorusDelayTimeValue" id="chorusvalue" defaultValue={100} change={changeChorusDelayValue} min={0} max={250} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
-          <EffectValue label="ChorusDepthValue" id="chorusvalue" defaultValue={0.2} change={changeChorusDepthValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
+          <EffectValue label="ChorusDelayTimeValue" id="chorusvalue" defaultValue={2.5} change={changeChorusDelayValue} min={0} max={10} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
+          <EffectValue label="ChorusDepthValue" id="chorusvalue" defaultValue={1} change={changeChorusDepthValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
+          <EffectValue label="ChorusWetValue" id="chorusvalue" defaultValue={1} change={changeChorusWetValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
           <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(chorus,1)}}>↓</button>
         </div>
         <div className="row effect">
           <EffectToggle label="Delay" id="delay" checked={false} change={addDelay} trueBypass={isDelay} setTrueBypass={setIsDelay}/>
-          <EffectValue label="DelayValue" id="delay" defaultValue={0.1} change={changeDelayValue} min={0} max={1} trueBypass={isDelay} setTrueBypass={setIsDelay}/>
+          <span>*value of 1 is a looper</span>
+          <EffectValue label="DelayValue" id="delay" defaultValue={0.1} change={changeDelayValue} min={0} max={1} trueBypass={isDelay} setTrueBypass={setIsDelay} strict={[1,1]}/>
         </div>
         <div className="row effect">
           <EffectToggle label="Reverb" id="reverb" checked={false} change={addReverb} trueBypass={isReverb} setTrueBypass={setIsReverb}/>
@@ -2996,8 +3229,9 @@ useState(()=>{
           <EffectValue label="ReverbValue" id="reverb" defaultValue={30} change={changeReverbValue} min={0} max={30} trueBypass={isReverb} setTrueBypass={setIsReverb}/>
         </div>
         <div className="row effect">
-          <EffectToggle label="PitchShifter" id="pitchshifter" checked={false} change={addPitchShifter} trueBypass={isReverb} setTrueBypass={setIsPitchShifter}/>
-          <EffectValue label="PitchShifterValue" id="pitchshifter" defaultValue={0} change={changePitchShifterValue} min={-24} max={24} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter}/>
+          <EffectToggle label="PitchShifter" id="pitchshifter" checked={false} change={addPitchShifter} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter}/>
+          <EffectValue label="PitchShifterValue" id="pitchshiftervalue" defaultValue={-12} change={changePitchShifterValue} min={-24} max={24} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter}/>
+          <EffectValue label="PitchShifterWetValue" id="pitchshifterwetvalue" defaultValue={1} change={changePitchShifterWetValue} min={0} max={1} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter} strict={[1,1]}/>
         </div>
       </div>
     </main>
