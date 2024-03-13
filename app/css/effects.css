@@ -81,7 +81,7 @@ input.checked {
         height: 2rem;
         top: -0.2rem;
         z-index: -1;
-        background-color: #333333;
+        background-color: color-mix(in srgb, var(--background) 90%, white);
         border: 0.1rem solid #1a1a1a;
         border-radius: 10%;
     }

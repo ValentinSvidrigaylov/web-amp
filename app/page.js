@@ -19,6 +19,8 @@ import {
 var map = {};
 
 export default function Home(props) {
+function noteToInt (note) {return notesSeqeunce.indexOf(note.replace(/\d+/.exec(note)[0],'')) + 12*/\d+/.exec(note)};
+function intToNote (int) {return notesSeqeunce[int%12]+~~(int/12)};
 let pb_changed = false;
 
 Tone.UserMedia.debug = true
@@ -29,8 +31,10 @@ const [mic, setMic] = useState();
 const [testvar, setTestvar] = useState("a");
 
 const [SF, setSF] = useState();
+const [tuner, setTuner] = useState();
 const [chordShapesShown, setChordShapesShown] = useState(false);
 const [isSF, setIsSF] = useState(false);
+const [isTuner, setIsTuner] = useState();
 const [volume, setVolume] = useState();
 const [isVolume, setIsVolume] = useState(false);
 const [distortion, setDistortion] = useState();
@@ -77,7 +81,9 @@ const [scaleLength, setScaleLength] = useState(647.7);
 
 useEffect(()=>{
   //default values must be the same as here, otherwise effect will be different from the one that is displayed
-  setMic(new Tone.UserMedia());
+  let mic_t = new Tone.UserMedia();
+  mic_t.output = new Tone.Mono();
+  setMic(mic_t);
   setGuitar(new Tone.Sampler({urls: {"C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3",}, release: 1, baseUrl: "./samples/guitar-electric/"}).chain(new Tone.Mono(), Tone.Destination));
   setVolume(new Tone.Volume(10));
   setDistortion(new Tone.Distortion(10))
@@ -89,14 +95,14 @@ useEffect(()=>{
   setPitchShifter(new Tone.PitchShift({pitch: -12, wet: 1}))
 },[]);
 
-useEffect(()=>{
-   if (mic && typeof mic == Tone.UserMedia) {
-      mic.output = new Tone.Mono();
-      mic.debug = true
-      mic.start()
-      console.log(mic)
-   }
-},[mic])
+// useEffect(()=>{
+//    if (mic && typeof mic == Tone.UserMedia) {
+//       mic.output = new Tone.Mono();
+//       mic.debug = true
+//       mic.start()
+//       console.log(mic)
+//    }
+// },[mic])
 
 // useEffect(()=>{
 //   if (typeof bitcrusher == Tone.BitCrusher) {
@@ -636,6 +642,8 @@ useEffect(()=>{
          let fret_heigh_increment = (2**(1/12))**i*30
          let fret_height = (2**(1/12))**1*30*2
          let pitch_note = intToNote(noteToInt(guitarTuning[j])+i+1);
+         // console.log(noteToInt(guitarTuning[j]))
+         // console.log(pitch_note)
          t_frets_triggers = [...t_frets_triggers, <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={i+1} fill='transparent' fillOpacity="0" note={pitch_note} onClickCapture={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log("t_pitchBinding before: ",t_pitchBinding); t_pitchBinding[j] = pitch_note; console.log("t_pitchBinding after: ",t_pitchBinding); pb_changed=false; setPitchBinding(pb => {let t = [...pb];t[j]=pitch_note;return t}); pb_changed = false; console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; e.target.parentElement.querySelectorAll('.circle')[i+1].style.display = 'block'; last_index[j] = i+1; console.log(e.target.parentElement.querySelectorAll('.circle')[i+1].style)}}/>]; 
       }
       t_strings.push(t_frets_triggers)
@@ -649,9 +657,6 @@ useEffect(()=>{
 useEffect(()=>{console.log(frets)},[frets])
 
 let notesSeqeunce = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']
-
-let noteToInt = (note) => notesSeqeunce.indexOf(note.replace(/\d+/.exec(note)[0],'')) + 12*/\d+/.exec(note);
-let intToNote = (int) => notesSeqeunce[int%12]+~~(int/12);
 
 useEffect(()=>{
    if (localStorage || !localStorage.getItem('stringsAmount')) {
@@ -1226,6 +1231,54 @@ function renderChords() {
    }
 }
 
+function renderTuner() {
+   // let tuner = document.getElementById("tuner");
+   if (typeof mic == "undefined") {
+      return;
+   }
+   let fft = new Tone.FFT({size:16384});
+   mic.connect(fft)
+   mic.open().then(() => {
+      // promise resolves when input is available
+      console.log("mic open");
+      // print the incoming mic levels in decibels
+      setInterval(() => {
+   //       let unordered = fft.getValue();
+   // //         let unordered = Object.entries(fft.getValue()).map(
+   // //    ([prop, propValue]) => { return [propValue, prop]; }
+   // // );
+   //       const result = Object.entries(unordered).map(
+   //    ([prop, propValue]) => { return [propValue, prop]; }
+   // );
+   // let ordered = Object.fromEntries(result);
+   // ordered = Object.keys(unordered).toSorted().toReversed().reduce(
+   // (obj, key) => { 
+   //    obj[key] = unordered[key]; 
+   //    return obj;
+   // }, 
+   // {}
+   // );
+   let mappedKeys = Object.keys(fft.getValue()).map(e=>fft.getFrequencyOfIndex(Number(e)));
+   let mapped_t = fft.getValue();
+   let mapped = {}
+   for (let i = 0; i < mappedKeys.length; i++) {
+      mapped[mappedKeys[i]]=mapped_t[i]
+   }
+   // console.log([1].map(index => fft.getFrequencyOfIndex(index)));
+   let t = Object.values(mapped);
+   let max = Math.max(...t);
+   console.log(Object.entries(mapped).filter(e=>e[1]==max))
+   // setTuner(JSON.stringify(Object.entries(mapped).filter(e=>e[1]==max)))
+   let cur_frequency = Tone.Frequency(Number(Object.entries(mapped).filter(e=>e[1]==max)[0][0]));
+   setTuner(`${cur_frequency != 0 ? cur_frequency.toNote() : "play some note to detect its pitch"}, difference: ${cur_frequency != 0 ? cur_frequency-Tone.Frequency(cur_frequency.toNote()) : ""}hz`)
+   }, 500);
+   }).catch(e => {
+      // promise is rejected when the user doesn't have or allow mic access
+      console.log("mic not open");
+   });
+   Tone.start()
+}
+
 useEffect(()=>{
    if (window) {
       //changePos section
@@ -1263,6 +1316,7 @@ useEffect(()=>{
 
       renderIRs();
       renderChords();
+      renderTuner();
    }
 },[mic])
 
@@ -1271,10 +1325,21 @@ useEffect(()=> () => {
    window.onkeyup = null;
 },[]);
 
-useEffect(()=>{console.log()},[])
+useEffect(()=>{
+   let sf_inner = document.getElementById("SF");
+   [...sf_inner.children].forEach((el)=>{
+      el.onclick = (e) => {e.stopPropagation()};
+   });
+},[])
 
 function addSF(value) {
    setIsSF(value);
+}
+
+function addTuner(value) {
+   Tone.start()
+   mic.open()
+   setIsTuner(value)
 }
 
 function setChordShape(shape) { //shape is an array of fret's indices
@@ -1378,9 +1443,19 @@ function testFunction() {
          </div>
       </div>
       <EffectToggle style={{zIndex: 1}} label="Strict fretting" id="SF" checked={false} change={addSF} trueBypass={isSF} setTrueBypass={setIsSF}/>
-      <div style={{width: "5rem", height: "5rem", border: "3px solid black", background: "#065691",zIndex: "10"}} onClickCapture={(e)=>{setChordShapesShown(!chordShapesShown)}}>
-         <div style={{display: "block", marginLeft: "auto", marginRight: "auto", textAlign: "center"}}>Chord shapes
-            <div style={{display: chordShapesShown ? "block" : "none"}}> {/*  style={{display: chordShapesShown ? "block" : "none"}} */}
+      <div id="GT">
+            <span>Guitar tuner</span>
+            <div id="tuner" style={{ wordBreak: "break-all" }}>
+               <div className="row effect">
+                  { isTuner ? tuner : "Turn on the tuner to be able to tune your instrument" }   
+                  <EffectToggle label="Tuner" id="tuner" checked={false} change={addTuner} trueBypass={isTuner} setTrueBypass={setIsTuner}/>
+               </div>
+            </div>
+      </div>
+      <div id="CS">
+         <div style={{display: "block", marginLeft: "auto", marginRight: "auto", textAlign: "center"}} onClickCapture={(e)=>{e.stopPropagation();e.preventDefault();setChordShapesShown(!chordShapesShown);}}>Chord shapes
+         </div>
+         <div style={{display: chordShapesShown ? "block" : "none"}}> {/*  style={{display: chordShapesShown ? "block" : "none"}} */}
                <div style={{overflow: "auto", width: "12rem", height: "12rem", background: "#999999", position: "relative", left: "50%", display: "grid", gridTemplateColumns: "1fr 1fr 1fr"}} id="DefaultChords">
                   {/* default chords */}
                   <div style={{border: "3px solid black"}} onClickCapture={(e)=>{setChordShape([0,1,0,2,3])}}>C</div>
@@ -1415,14 +1490,13 @@ function testFunction() {
                   </form>
                </div>
             </div>
-         </div>
       </div>
       {/* <EffectToggle label="Volume" id="volume" checked={false} change={addVolume} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
       <EffectValue label="VolumeValue" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={0} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/> */}
       {/* transform: translateY(300px) rotate(315deg) !important; */}
       {/* only add triggers, not whole surface, but you should make strings move */}
       <div id="guitar">
-      <svg viewBox='0 0 1000 900' id="guitarsvg" transform='rotate(45)' style={{marginTop: "-15vh", marginBottom: "-15vh", zIndex: "1"}}><defs
+      <svg viewBox='0 0 1000 900' id="guitarsvg" transform='rotate(45)' style={{marginTop: "-15vh", marginBottom: "-15vh", zIndex: "-1"}} xmlns="http://www.w3.org/2000/svg"><defs
      id="defs6">
     <clipPath
        clipPathUnits="userSpaceOnUse"
@@ -2660,9 +2734,16 @@ function testFunction() {
          {/* todo: automatize this mess, make adequate tuning system */}
          {/* { <rect width="350" height="500" y="0"/> } */}
          <g transform='rotate(1.35)'>
-            <rect width="15" height="6750" x="500" fill='#b8b8b8'/>
+            <path d="M 0 0 Q 0 0 0 1600" stroke="#b8b8b8" fill="transparent" strokeWidth="15" id='string0wiggly' transform="translate(507.5)">
+               <animate
+               attributeName="d"
+               values='M 0 0 Q 50 800 0 1600;M 0 0 Q -25.0 800 0 1600;M 0 0 Q 12.5 800 0 1600;M 0 0 Q -8.333333333333334 800 0 1600;M 0 0 Q 6.25 800 0 1600;M 0 0 Q -5.0 800 0 1600;M 0 0 Q 4.166666666666667 800 0 1600;M 0 0 Q -3.5714285714285716 800 0 1600;M 0 0 Q 3.125 800 0 1600;M 0 0 Q -2.7777777777777777 800 0 1600;M 0 0 Q 2.5 800 0 1600;M 0 0 Q -2.272727272727273 800 0 1600;M 0 0 Q 2.0833333333333335 800 0 1600;M 0 0 Q -1.9230769230769231 800 0 1600;M 0 0 Q 1.7857142857142858 800 0 1600;M 0 0 Q -1.6666666666666667 800 0 1600;M 0 0 Q 1.5625 800 0 1600;M 0 0 Q -1.4705882352941178 800 0 1600;M 0 0 Q 1.3888888888888888 800 0 1600;M 0 0 Q -1.3157894736842106 800 0 1600;M 0 0 Q 1.25 800 0 1600;M 0 0 Q -1.1904761904761905 800 0 1600;M 0 0 Q 1.1363636363636365 800 0 1600;M 0 0 Q -1.0869565217391304 800 0 1600;M 0 0 Q 1.0416666666666667 800 0 1600;M 0 0 Q -1.0 800 0 1600;M 0 0 Q 0.9615384615384616 800 0 1600;M 0 0 Q -0.9259259259259259 800 0 1600;M 0 0 Q 0.8928571428571429 800 0 1600;M 0 0 Q -0.8620689655172413 800 0 1600;M 0 0 Q 0.8333333333333334 800 0 1600;M 0 0 Q -0.8064516129032258 800 0 1600;M 0 0 Q 0.78125 800 0 1600;M 0 0 Q -0.7575757575757576 800 0 1600;M 0 0 Q 0.7352941176470589 800 0 1600;M 0 0 Q -0.7142857142857143 800 0 1600;M 0 0 Q 0.6944444444444444 800 0 1600;M 0 0 Q -0.6756756756756757 800 0 1600;M 0 0 Q 0.6578947368421053 800 0 1600;M 0 0 Q -0.6410256410256411 800 0 1600;M 0 0 Q 0.625 800 0 1600;M 0 0 Q -0.6097560975609756 800 0 1600;M 0 0 Q 0.5952380952380952 800 0 1600;M 0 0 Q -0.5813953488372093 800 0 1600;M 0 0 Q 0.5681818181818182 800 0 1600;M 0 0 Q -0.5555555555555556 800 0 1600;M 0 0 Q 0.5434782608695652 800 0 1600;M 0 0 Q -0.5319148936170213 800 0 1600;M 0 0 Q 0.5208333333333334 800 0 1600;M 0 0 Q -0.5102040816326531 800 0 1600;M 0 0 Q 0.5 800 0 1600;M 0 0 Q -0.49019607843137253 800 0 1600;M 0 0 Q 0.4807692307692308 800 0 1600;M 0 0 Q -0.4716981132075472 800 0 1600;M 0 0 Q 0.46296296296296297 800 0 1600;M 0 0 Q -0.45454545454545453 800 0 1600;M 0 0 Q 0.44642857142857145 800 0 1600;M 0 0 Q -0.43859649122807015 800 0 1600;M 0 0 Q 0.43103448275862066 800 0 1600;M 0 0 Q -0.423728813559322 800 0 1600;M 0 0 Q 0.4166666666666667 800 0 1600;M 0 0 Q -0.4098360655737705 800 0 1600;M 0 0 Q 0.4032258064516129 800 0 1600;M 0 0 Q -0.3968253968253968 800 0 1600;M 0 0 Q 0.390625 800 0 1600;M 0 0 Q -0.38461538461538464 800 0 1600;M 0 0 Q 0.3787878787878788 800 0 1600;M 0 0 Q -0.373134328358209 800 0 1600;M 0 0 Q 0.36764705882352944 800 0 1600;M 0 0 Q -0.36231884057971014 800 0 1600;M 0 0 Q 0.35714285714285715 800 0 1600;M 0 0 Q -0.352112676056338 800 0 1600;M 0 0 Q 0.3472222222222222 800 0 1600;M 0 0 Q -0.3424657534246575 800 0 1600;M 0 0 Q 0.33783783783783783 800 0 1600;M 0 0 Q -0.3333333333333333 800 0 1600;M 0 0 Q 0.32894736842105265 800 0 1600;M 0 0 Q -0.3246753246753247 800 0 1600;M 0 0 Q 0.32051282051282054 800 0 1600;M 0 0 Q -0.31645569620253167 800 0 1600;M 0 0 Q 0.3125 800 0 1600;M 0 0 Q -0.30864197530864196 800 0 1600;M 0 0 Q 0.3048780487804878 800 0 1600;M 0 0 Q -0.30120481927710846 800 0 1600;M 0 0 Q 0.2976190476190476 800 0 1600;M 0 0 Q -0.29411764705882354 800 0 1600;M 0 0 Q 0.29069767441860467 800 0 1600;M 0 0 Q -0.28735632183908044 800 0 1600;M 0 0 Q 0.2840909090909091 800 0 1600;M 0 0 Q -0.2808988764044944 800 0 1600;M 0 0 Q 0.2777777777777778 800 0 1600;M 0 0 Q -0.27472527472527475 800 0 1600;M 0 0 Q 0.2717391304347826 800 0 1600;M 0 0 Q -0.26881720430107525 800 0 1600;M 0 0 Q 0.26595744680851063 800 0 1600;M 0 0 Q -0.2631578947368421 800 0 1600;M 0 0 Q 0.2604166666666667 800 0 1600;M 0 0 Q -0.25773195876288657 800 0 1600;M 0 0 Q 0.25510204081632654 800 0 1600;M 0 0 Q -0.25252525252525254 800 0 1600;M 0 0 Q 0.25 800 0 1600'
+               dur="37.14s"
+               repeatCount="1"/>
+            </path>
+            <rect width="15" height="5150" x="500" y="1600" fill='#b8b8b8'/>
             {/* <g className='circle' style={{display: pitchBinding[j] == pitch_note ? 'block' : 'none'}}><circle r="40" cx={fret_heigh_increment/6} cy={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2} fill='darkblue' id={pitch_note}/><text textAnchor="middle" x={-fret_heigh_increment/6} y={distance_from_nut+(distance_to_nut*(1-1/((2**(1/12))**(i+1)))-distance_from_nut)/2+30} fill='whitesmoke' style={{fontSize: '5em'}}>{pitch_note}</text></g>, <rect height={fret_size} width={fret_height} x={-fret_heigh_increment/2} y={distance_from_nut} key={i} fill='transparent' fillOpacity="0" note={pitch_note} onClick={(e) => {let t_pitchBinding = [...e.target.parentElement.parentElement.parentElement.getAttribute('pitchbinding').split(',')];console.log(t_pitchBinding); t_pitchBinding[j] = pitch_note; setPitchBinding(t_pitchBinding); console.log(e.target.parentElement.querySelector('.circle')); e.target.parentElement.querySelectorAll('.circle')[i].style.display = 'block'; e.target.parentElement.querySelectorAll('.circle')[last_index[j]].style.display = 'none'; last_index[j] = i; console.log(e.target.parentElement.querySelectorAll('.circle')[i].style)}}/> */}
-            <rect width={(2**(1/12))**1*75} height="1650" x={500-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-1' data-tune={guitarTuning[0]} data-currentTune={pitchBinding[0]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={500-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-1' data-tune={guitarTuning[0]} datacurrenttune={pitchBinding[0]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('datacurrenttune'));console.log('attack');console.log(e.target.parentElement);e.target.parentElement.querySelector("path#string0wiggly").children[0].beginElement();console.log(e.target.parentElement.querySelector("path#string0wiggly").children[0])}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}}/>
             <g transform='rotate(179.9) translate(-500, -5500) scale(-1,1)'>
                {/* needs to be fixed by simply adding sub zero index to last_index array */}
                { /*
@@ -2674,40 +2755,84 @@ function testFunction() {
             </g>
          </g>
          <g transform='rotate(1)'>
-            <rect width="17.5" height="6550" x="400" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={400-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-2' data-tune={guitarTuning[1]} data-currentTune={pitchBinding[1]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
-            <g transform='rotate(180) translate(-400, -5500) scale(-1,1)'>
+            <path d="M 0 0 Q 0 0 0 1600" stroke="#b8b8b8" fill="transparent" strokeWidth="17.5" id='string1wiggly' transform="translate(408.75)">
+               <animate
+               attributeName="d"
+               values='M 0 0 Q 50 800 0 1600;M 0 0 Q -25.0 800 0 1600;M 0 0 Q 12.5 800 0 1600;M 0 0 Q -8.333333333333334 800 0 1600;M 0 0 Q 6.25 800 0 1600;M 0 0 Q -5.0 800 0 1600;M 0 0 Q 4.166666666666667 800 0 1600;M 0 0 Q -3.5714285714285716 800 0 1600;M 0 0 Q 3.125 800 0 1600;M 0 0 Q -2.7777777777777777 800 0 1600;M 0 0 Q 2.5 800 0 1600;M 0 0 Q -2.272727272727273 800 0 1600;M 0 0 Q 2.0833333333333335 800 0 1600;M 0 0 Q -1.9230769230769231 800 0 1600;M 0 0 Q 1.7857142857142858 800 0 1600;M 0 0 Q -1.6666666666666667 800 0 1600;M 0 0 Q 1.5625 800 0 1600;M 0 0 Q -1.4705882352941178 800 0 1600;M 0 0 Q 1.3888888888888888 800 0 1600;M 0 0 Q -1.3157894736842106 800 0 1600;M 0 0 Q 1.25 800 0 1600;M 0 0 Q -1.1904761904761905 800 0 1600;M 0 0 Q 1.1363636363636365 800 0 1600;M 0 0 Q -1.0869565217391304 800 0 1600;M 0 0 Q 1.0416666666666667 800 0 1600;M 0 0 Q -1.0 800 0 1600;M 0 0 Q 0.9615384615384616 800 0 1600;M 0 0 Q -0.9259259259259259 800 0 1600;M 0 0 Q 0.8928571428571429 800 0 1600;M 0 0 Q -0.8620689655172413 800 0 1600;M 0 0 Q 0.8333333333333334 800 0 1600;M 0 0 Q -0.8064516129032258 800 0 1600;M 0 0 Q 0.78125 800 0 1600;M 0 0 Q -0.7575757575757576 800 0 1600;M 0 0 Q 0.7352941176470589 800 0 1600;M 0 0 Q -0.7142857142857143 800 0 1600;M 0 0 Q 0.6944444444444444 800 0 1600;M 0 0 Q -0.6756756756756757 800 0 1600;M 0 0 Q 0.6578947368421053 800 0 1600;M 0 0 Q -0.6410256410256411 800 0 1600;M 0 0 Q 0.625 800 0 1600;M 0 0 Q -0.6097560975609756 800 0 1600;M 0 0 Q 0.5952380952380952 800 0 1600;M 0 0 Q -0.5813953488372093 800 0 1600;M 0 0 Q 0.5681818181818182 800 0 1600;M 0 0 Q -0.5555555555555556 800 0 1600;M 0 0 Q 0.5434782608695652 800 0 1600;M 0 0 Q -0.5319148936170213 800 0 1600;M 0 0 Q 0.5208333333333334 800 0 1600;M 0 0 Q -0.5102040816326531 800 0 1600;M 0 0 Q 0.5 800 0 1600;M 0 0 Q -0.49019607843137253 800 0 1600;M 0 0 Q 0.4807692307692308 800 0 1600;M 0 0 Q -0.4716981132075472 800 0 1600;M 0 0 Q 0.46296296296296297 800 0 1600;M 0 0 Q -0.45454545454545453 800 0 1600;M 0 0 Q 0.44642857142857145 800 0 1600;M 0 0 Q -0.43859649122807015 800 0 1600;M 0 0 Q 0.43103448275862066 800 0 1600;M 0 0 Q -0.423728813559322 800 0 1600;M 0 0 Q 0.4166666666666667 800 0 1600;M 0 0 Q -0.4098360655737705 800 0 1600;M 0 0 Q 0.4032258064516129 800 0 1600;M 0 0 Q -0.3968253968253968 800 0 1600;M 0 0 Q 0.390625 800 0 1600;M 0 0 Q -0.38461538461538464 800 0 1600;M 0 0 Q 0.3787878787878788 800 0 1600;M 0 0 Q -0.373134328358209 800 0 1600;M 0 0 Q 0.36764705882352944 800 0 1600;M 0 0 Q -0.36231884057971014 800 0 1600;M 0 0 Q 0.35714285714285715 800 0 1600;M 0 0 Q -0.352112676056338 800 0 1600;M 0 0 Q 0.3472222222222222 800 0 1600;M 0 0 Q -0.3424657534246575 800 0 1600;M 0 0 Q 0.33783783783783783 800 0 1600;M 0 0 Q -0.3333333333333333 800 0 1600;M 0 0 Q 0.32894736842105265 800 0 1600;M 0 0 Q -0.3246753246753247 800 0 1600;M 0 0 Q 0.32051282051282054 800 0 1600;M 0 0 Q -0.31645569620253167 800 0 1600;M 0 0 Q 0.3125 800 0 1600;M 0 0 Q -0.30864197530864196 800 0 1600;M 0 0 Q 0.3048780487804878 800 0 1600;M 0 0 Q -0.30120481927710846 800 0 1600;M 0 0 Q 0.2976190476190476 800 0 1600;M 0 0 Q -0.29411764705882354 800 0 1600;M 0 0 Q 0.29069767441860467 800 0 1600;M 0 0 Q -0.28735632183908044 800 0 1600;M 0 0 Q 0.2840909090909091 800 0 1600;M 0 0 Q -0.2808988764044944 800 0 1600;M 0 0 Q 0.2777777777777778 800 0 1600;M 0 0 Q -0.27472527472527475 800 0 1600;M 0 0 Q 0.2717391304347826 800 0 1600;M 0 0 Q -0.26881720430107525 800 0 1600;M 0 0 Q 0.26595744680851063 800 0 1600;M 0 0 Q -0.2631578947368421 800 0 1600;M 0 0 Q 0.2604166666666667 800 0 1600;M 0 0 Q -0.25773195876288657 800 0 1600;M 0 0 Q 0.25510204081632654 800 0 1600;M 0 0 Q -0.25252525252525254 800 0 1600;M 0 0 Q 0.25 800 0 1600'
+               dur="37.14s"
+               repeatCount="1"/>
+            </path>
+            <rect width="17.5" height="4950" x="400" y="1600" fill='#b8b8b8'/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={400-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-2' data-tune={guitarTuning[1]} datacurrenttune={pitchBinding[1]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('datacurrenttune'));console.log('attack');console.log(e.target.parentElement);e.target.parentElement.querySelector("path#string1wiggly").children[0].beginElement();console.log(e.target.parentElement.querySelector("path#string1wiggly").children[0])}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}}/>
+            <g transform='rotate(180) translate(-400, -5500) scale(-1,1)'> 
                {/* <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={1} fill='transparent' fillOpacity="0" note={guitarTuning[1]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[1] = guitarTuning[1];setPitchBinding(t_pitchBinding)}}/> */}
                { stringsTriggers[1] }
             </g>
          </g>
          <g transform='rotate(0.65)'>
-            <rect width="22.5" height="6400" x="300" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={300-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-3' data-tune={guitarTuning[2]} data-currentTune={pitchBinding[2]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
+            <path d="M 0 0 Q 0 0 0 1600" stroke="#b8b8b8" fill="transparent" strokeWidth="20" id='string2wiggly' transform="translate(310)">
+               <animate
+               attributeName="d"
+               values='M 0 0 Q 50 800 0 1600;M 0 0 Q -25.0 800 0 1600;M 0 0 Q 12.5 800 0 1600;M 0 0 Q -8.333333333333334 800 0 1600;M 0 0 Q 6.25 800 0 1600;M 0 0 Q -5.0 800 0 1600;M 0 0 Q 4.166666666666667 800 0 1600;M 0 0 Q -3.5714285714285716 800 0 1600;M 0 0 Q 3.125 800 0 1600;M 0 0 Q -2.7777777777777777 800 0 1600;M 0 0 Q 2.5 800 0 1600;M 0 0 Q -2.272727272727273 800 0 1600;M 0 0 Q 2.0833333333333335 800 0 1600;M 0 0 Q -1.9230769230769231 800 0 1600;M 0 0 Q 1.7857142857142858 800 0 1600;M 0 0 Q -1.6666666666666667 800 0 1600;M 0 0 Q 1.5625 800 0 1600;M 0 0 Q -1.4705882352941178 800 0 1600;M 0 0 Q 1.3888888888888888 800 0 1600;M 0 0 Q -1.3157894736842106 800 0 1600;M 0 0 Q 1.25 800 0 1600;M 0 0 Q -1.1904761904761905 800 0 1600;M 0 0 Q 1.1363636363636365 800 0 1600;M 0 0 Q -1.0869565217391304 800 0 1600;M 0 0 Q 1.0416666666666667 800 0 1600;M 0 0 Q -1.0 800 0 1600;M 0 0 Q 0.9615384615384616 800 0 1600;M 0 0 Q -0.9259259259259259 800 0 1600;M 0 0 Q 0.8928571428571429 800 0 1600;M 0 0 Q -0.8620689655172413 800 0 1600;M 0 0 Q 0.8333333333333334 800 0 1600;M 0 0 Q -0.8064516129032258 800 0 1600;M 0 0 Q 0.78125 800 0 1600;M 0 0 Q -0.7575757575757576 800 0 1600;M 0 0 Q 0.7352941176470589 800 0 1600;M 0 0 Q -0.7142857142857143 800 0 1600;M 0 0 Q 0.6944444444444444 800 0 1600;M 0 0 Q -0.6756756756756757 800 0 1600;M 0 0 Q 0.6578947368421053 800 0 1600;M 0 0 Q -0.6410256410256411 800 0 1600;M 0 0 Q 0.625 800 0 1600;M 0 0 Q -0.6097560975609756 800 0 1600;M 0 0 Q 0.5952380952380952 800 0 1600;M 0 0 Q -0.5813953488372093 800 0 1600;M 0 0 Q 0.5681818181818182 800 0 1600;M 0 0 Q -0.5555555555555556 800 0 1600;M 0 0 Q 0.5434782608695652 800 0 1600;M 0 0 Q -0.5319148936170213 800 0 1600;M 0 0 Q 0.5208333333333334 800 0 1600;M 0 0 Q -0.5102040816326531 800 0 1600;M 0 0 Q 0.5 800 0 1600;M 0 0 Q -0.49019607843137253 800 0 1600;M 0 0 Q 0.4807692307692308 800 0 1600;M 0 0 Q -0.4716981132075472 800 0 1600;M 0 0 Q 0.46296296296296297 800 0 1600;M 0 0 Q -0.45454545454545453 800 0 1600;M 0 0 Q 0.44642857142857145 800 0 1600;M 0 0 Q -0.43859649122807015 800 0 1600;M 0 0 Q 0.43103448275862066 800 0 1600;M 0 0 Q -0.423728813559322 800 0 1600;M 0 0 Q 0.4166666666666667 800 0 1600;M 0 0 Q -0.4098360655737705 800 0 1600;M 0 0 Q 0.4032258064516129 800 0 1600;M 0 0 Q -0.3968253968253968 800 0 1600;M 0 0 Q 0.390625 800 0 1600;M 0 0 Q -0.38461538461538464 800 0 1600;M 0 0 Q 0.3787878787878788 800 0 1600;M 0 0 Q -0.373134328358209 800 0 1600;M 0 0 Q 0.36764705882352944 800 0 1600;M 0 0 Q -0.36231884057971014 800 0 1600;M 0 0 Q 0.35714285714285715 800 0 1600;M 0 0 Q -0.352112676056338 800 0 1600;M 0 0 Q 0.3472222222222222 800 0 1600;M 0 0 Q -0.3424657534246575 800 0 1600;M 0 0 Q 0.33783783783783783 800 0 1600;M 0 0 Q -0.3333333333333333 800 0 1600;M 0 0 Q 0.32894736842105265 800 0 1600;M 0 0 Q -0.3246753246753247 800 0 1600;M 0 0 Q 0.32051282051282054 800 0 1600;M 0 0 Q -0.31645569620253167 800 0 1600;M 0 0 Q 0.3125 800 0 1600;M 0 0 Q -0.30864197530864196 800 0 1600;M 0 0 Q 0.3048780487804878 800 0 1600;M 0 0 Q -0.30120481927710846 800 0 1600;M 0 0 Q 0.2976190476190476 800 0 1600;M 0 0 Q -0.29411764705882354 800 0 1600;M 0 0 Q 0.29069767441860467 800 0 1600;M 0 0 Q -0.28735632183908044 800 0 1600;M 0 0 Q 0.2840909090909091 800 0 1600;M 0 0 Q -0.2808988764044944 800 0 1600;M 0 0 Q 0.2777777777777778 800 0 1600;M 0 0 Q -0.27472527472527475 800 0 1600;M 0 0 Q 0.2717391304347826 800 0 1600;M 0 0 Q -0.26881720430107525 800 0 1600;M 0 0 Q 0.26595744680851063 800 0 1600;M 0 0 Q -0.2631578947368421 800 0 1600;M 0 0 Q 0.2604166666666667 800 0 1600;M 0 0 Q -0.25773195876288657 800 0 1600;M 0 0 Q 0.25510204081632654 800 0 1600;M 0 0 Q -0.25252525252525254 800 0 1600;M 0 0 Q 0.25 800 0 1600'
+               dur="42.14s"
+               repeatCount="1"/>
+            </path>
+            <rect width="20" height="4800" x="300" y="1600" fill='#b8b8b8'/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={300-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-3' data-tune={guitarTuning[2]} datacurrenttune={pitchBinding[2]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('datacurrenttune'));console.log('attack');console.log(e.target.parentElement);e.target.parentElement.querySelector("path#string2wiggly").children[0].beginElement();console.log(e.target.parentElement.querySelector("path#string2wiggly").children[0])}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-300, -5500) scale(-1,1)'>
                {/* <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={2} fill='transparent' fillOpacity="0" note={guitarTuning[2]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[2] = guitarTuning[2];setPitchBinding(t_pitchBinding)}}/> */}
                { stringsTriggers[2] }
             </g>
          </g>
          <g transform='rotate(0.25)'>
-            <rect width="20" height="6200" x="200" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={200-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-4' data-tune={guitarTuning[3]} data-currentTune={pitchBinding[3]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
+            <path d="M 0 0 Q 0 0 0 1600" stroke="#b8b8b8" fill="transparent" strokeWidth="22.5" id='string3wiggly' transform="translate(211.25)">
+               <animate
+               attributeName="d"
+               values='M 0 0 Q 50 800 0 1600;M 0 0 Q -25.0 800 0 1600;M 0 0 Q 12.5 800 0 1600;M 0 0 Q -8.333333333333334 800 0 1600;M 0 0 Q 6.25 800 0 1600;M 0 0 Q -5.0 800 0 1600;M 0 0 Q 4.166666666666667 800 0 1600;M 0 0 Q -3.5714285714285716 800 0 1600;M 0 0 Q 3.125 800 0 1600;M 0 0 Q -2.7777777777777777 800 0 1600;M 0 0 Q 2.5 800 0 1600;M 0 0 Q -2.272727272727273 800 0 1600;M 0 0 Q 2.0833333333333335 800 0 1600;M 0 0 Q -1.9230769230769231 800 0 1600;M 0 0 Q 1.7857142857142858 800 0 1600;M 0 0 Q -1.6666666666666667 800 0 1600;M 0 0 Q 1.5625 800 0 1600;M 0 0 Q -1.4705882352941178 800 0 1600;M 0 0 Q 1.3888888888888888 800 0 1600;M 0 0 Q -1.3157894736842106 800 0 1600;M 0 0 Q 1.25 800 0 1600;M 0 0 Q -1.1904761904761905 800 0 1600;M 0 0 Q 1.1363636363636365 800 0 1600;M 0 0 Q -1.0869565217391304 800 0 1600;M 0 0 Q 1.0416666666666667 800 0 1600;M 0 0 Q -1.0 800 0 1600;M 0 0 Q 0.9615384615384616 800 0 1600;M 0 0 Q -0.9259259259259259 800 0 1600;M 0 0 Q 0.8928571428571429 800 0 1600;M 0 0 Q -0.8620689655172413 800 0 1600;M 0 0 Q 0.8333333333333334 800 0 1600;M 0 0 Q -0.8064516129032258 800 0 1600;M 0 0 Q 0.78125 800 0 1600;M 0 0 Q -0.7575757575757576 800 0 1600;M 0 0 Q 0.7352941176470589 800 0 1600;M 0 0 Q -0.7142857142857143 800 0 1600;M 0 0 Q 0.6944444444444444 800 0 1600;M 0 0 Q -0.6756756756756757 800 0 1600;M 0 0 Q 0.6578947368421053 800 0 1600;M 0 0 Q -0.6410256410256411 800 0 1600;M 0 0 Q 0.625 800 0 1600;M 0 0 Q -0.6097560975609756 800 0 1600;M 0 0 Q 0.5952380952380952 800 0 1600;M 0 0 Q -0.5813953488372093 800 0 1600;M 0 0 Q 0.5681818181818182 800 0 1600;M 0 0 Q -0.5555555555555556 800 0 1600;M 0 0 Q 0.5434782608695652 800 0 1600;M 0 0 Q -0.5319148936170213 800 0 1600;M 0 0 Q 0.5208333333333334 800 0 1600;M 0 0 Q -0.5102040816326531 800 0 1600;M 0 0 Q 0.5 800 0 1600;M 0 0 Q -0.49019607843137253 800 0 1600;M 0 0 Q 0.4807692307692308 800 0 1600;M 0 0 Q -0.4716981132075472 800 0 1600;M 0 0 Q 0.46296296296296297 800 0 1600;M 0 0 Q -0.45454545454545453 800 0 1600;M 0 0 Q 0.44642857142857145 800 0 1600;M 0 0 Q -0.43859649122807015 800 0 1600;M 0 0 Q 0.43103448275862066 800 0 1600;M 0 0 Q -0.423728813559322 800 0 1600;M 0 0 Q 0.4166666666666667 800 0 1600;M 0 0 Q -0.4098360655737705 800 0 1600;M 0 0 Q 0.4032258064516129 800 0 1600;M 0 0 Q -0.3968253968253968 800 0 1600;M 0 0 Q 0.390625 800 0 1600;M 0 0 Q -0.38461538461538464 800 0 1600;M 0 0 Q 0.3787878787878788 800 0 1600;M 0 0 Q -0.373134328358209 800 0 1600;M 0 0 Q 0.36764705882352944 800 0 1600;M 0 0 Q -0.36231884057971014 800 0 1600;M 0 0 Q 0.35714285714285715 800 0 1600;M 0 0 Q -0.352112676056338 800 0 1600;M 0 0 Q 0.3472222222222222 800 0 1600;M 0 0 Q -0.3424657534246575 800 0 1600;M 0 0 Q 0.33783783783783783 800 0 1600;M 0 0 Q -0.3333333333333333 800 0 1600;M 0 0 Q 0.32894736842105265 800 0 1600;M 0 0 Q -0.3246753246753247 800 0 1600;M 0 0 Q 0.32051282051282054 800 0 1600;M 0 0 Q -0.31645569620253167 800 0 1600;M 0 0 Q 0.3125 800 0 1600;M 0 0 Q -0.30864197530864196 800 0 1600;M 0 0 Q 0.3048780487804878 800 0 1600;M 0 0 Q -0.30120481927710846 800 0 1600;M 0 0 Q 0.2976190476190476 800 0 1600;M 0 0 Q -0.29411764705882354 800 0 1600;M 0 0 Q 0.29069767441860467 800 0 1600;M 0 0 Q -0.28735632183908044 800 0 1600;M 0 0 Q 0.2840909090909091 800 0 1600;M 0 0 Q -0.2808988764044944 800 0 1600;M 0 0 Q 0.2777777777777778 800 0 1600;M 0 0 Q -0.27472527472527475 800 0 1600;M 0 0 Q 0.2717391304347826 800 0 1600;M 0 0 Q -0.26881720430107525 800 0 1600;M 0 0 Q 0.26595744680851063 800 0 1600;M 0 0 Q -0.2631578947368421 800 0 1600;M 0 0 Q 0.2604166666666667 800 0 1600;M 0 0 Q -0.25773195876288657 800 0 1600;M 0 0 Q 0.25510204081632654 800 0 1600;M 0 0 Q -0.25252525252525254 800 0 1600;M 0 0 Q 0.25 800 0 1600'
+               dur="47.14s"
+               repeatCount="1"/>
+            </path>
+            <rect width="22.5" height="4600" y="1600" x="200" fill='#b8b8b8'/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={200-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-4' data-tune={guitarTuning[3]} datacurrenttune={pitchBinding[3]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('datacurrenttune'));console.log('attack');console.log(e.target.parentElement);e.target.parentElement.querySelector("path#string3wiggly").children[0].beginElement();console.log(e.target.parentElement.querySelector("path#string3wiggly").children[0])}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-200, -5500) scale(-1,1)'>
                {/* <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={3}  fill='transparent' fillOpacity="0" note={guitarTuning[3]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[3] = guitarTuning[3];setPitchBinding(t_pitchBinding)}}/> */}
                { stringsTriggers[3] }
             </g>
          </g>
          <g transform='rotate(-0.05)'>
-            <rect width="25" height="6000" x="100" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={100-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-5' data-tune={guitarTuning[4]} data-currentTune={pitchBinding[4]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
+            <path d="M 0 0 Q 0 0 0 1600" stroke="#b8b8b8" fill="transparent" strokeWidth="25" id='string4wiggly' transform="translate(113.75)">
+               <animate
+               attributeName="d"
+               values='M 0 0 Q 50 800 0 1600;M 0 0 Q -25.0 800 0 1600;M 0 0 Q 12.5 800 0 1600;M 0 0 Q -8.333333333333334 800 0 1600;M 0 0 Q 6.25 800 0 1600;M 0 0 Q -5.0 800 0 1600;M 0 0 Q 4.166666666666667 800 0 1600;M 0 0 Q -3.5714285714285716 800 0 1600;M 0 0 Q 3.125 800 0 1600;M 0 0 Q -2.7777777777777777 800 0 1600;M 0 0 Q 2.5 800 0 1600;M 0 0 Q -2.272727272727273 800 0 1600;M 0 0 Q 2.0833333333333335 800 0 1600;M 0 0 Q -1.9230769230769231 800 0 1600;M 0 0 Q 1.7857142857142858 800 0 1600;M 0 0 Q -1.6666666666666667 800 0 1600;M 0 0 Q 1.5625 800 0 1600;M 0 0 Q -1.4705882352941178 800 0 1600;M 0 0 Q 1.3888888888888888 800 0 1600;M 0 0 Q -1.3157894736842106 800 0 1600;M 0 0 Q 1.25 800 0 1600;M 0 0 Q -1.1904761904761905 800 0 1600;M 0 0 Q 1.1363636363636365 800 0 1600;M 0 0 Q -1.0869565217391304 800 0 1600;M 0 0 Q 1.0416666666666667 800 0 1600;M 0 0 Q -1.0 800 0 1600;M 0 0 Q 0.9615384615384616 800 0 1600;M 0 0 Q -0.9259259259259259 800 0 1600;M 0 0 Q 0.8928571428571429 800 0 1600;M 0 0 Q -0.8620689655172413 800 0 1600;M 0 0 Q 0.8333333333333334 800 0 1600;M 0 0 Q -0.8064516129032258 800 0 1600;M 0 0 Q 0.78125 800 0 1600;M 0 0 Q -0.7575757575757576 800 0 1600;M 0 0 Q 0.7352941176470589 800 0 1600;M 0 0 Q -0.7142857142857143 800 0 1600;M 0 0 Q 0.6944444444444444 800 0 1600;M 0 0 Q -0.6756756756756757 800 0 1600;M 0 0 Q 0.6578947368421053 800 0 1600;M 0 0 Q -0.6410256410256411 800 0 1600;M 0 0 Q 0.625 800 0 1600;M 0 0 Q -0.6097560975609756 800 0 1600;M 0 0 Q 0.5952380952380952 800 0 1600;M 0 0 Q -0.5813953488372093 800 0 1600;M 0 0 Q 0.5681818181818182 800 0 1600;M 0 0 Q -0.5555555555555556 800 0 1600;M 0 0 Q 0.5434782608695652 800 0 1600;M 0 0 Q -0.5319148936170213 800 0 1600;M 0 0 Q 0.5208333333333334 800 0 1600;M 0 0 Q -0.5102040816326531 800 0 1600;M 0 0 Q 0.5 800 0 1600;M 0 0 Q -0.49019607843137253 800 0 1600;M 0 0 Q 0.4807692307692308 800 0 1600;M 0 0 Q -0.4716981132075472 800 0 1600;M 0 0 Q 0.46296296296296297 800 0 1600;M 0 0 Q -0.45454545454545453 800 0 1600;M 0 0 Q 0.44642857142857145 800 0 1600;M 0 0 Q -0.43859649122807015 800 0 1600;M 0 0 Q 0.43103448275862066 800 0 1600;M 0 0 Q -0.423728813559322 800 0 1600;M 0 0 Q 0.4166666666666667 800 0 1600;M 0 0 Q -0.4098360655737705 800 0 1600;M 0 0 Q 0.4032258064516129 800 0 1600;M 0 0 Q -0.3968253968253968 800 0 1600;M 0 0 Q 0.390625 800 0 1600;M 0 0 Q -0.38461538461538464 800 0 1600;M 0 0 Q 0.3787878787878788 800 0 1600;M 0 0 Q -0.373134328358209 800 0 1600;M 0 0 Q 0.36764705882352944 800 0 1600;M 0 0 Q -0.36231884057971014 800 0 1600;M 0 0 Q 0.35714285714285715 800 0 1600;M 0 0 Q -0.352112676056338 800 0 1600;M 0 0 Q 0.3472222222222222 800 0 1600;M 0 0 Q -0.3424657534246575 800 0 1600;M 0 0 Q 0.33783783783783783 800 0 1600;M 0 0 Q -0.3333333333333333 800 0 1600;M 0 0 Q 0.32894736842105265 800 0 1600;M 0 0 Q -0.3246753246753247 800 0 1600;M 0 0 Q 0.32051282051282054 800 0 1600;M 0 0 Q -0.31645569620253167 800 0 1600;M 0 0 Q 0.3125 800 0 1600;M 0 0 Q -0.30864197530864196 800 0 1600;M 0 0 Q 0.3048780487804878 800 0 1600;M 0 0 Q -0.30120481927710846 800 0 1600;M 0 0 Q 0.2976190476190476 800 0 1600;M 0 0 Q -0.29411764705882354 800 0 1600;M 0 0 Q 0.29069767441860467 800 0 1600;M 0 0 Q -0.28735632183908044 800 0 1600;M 0 0 Q 0.2840909090909091 800 0 1600;M 0 0 Q -0.2808988764044944 800 0 1600;M 0 0 Q 0.2777777777777778 800 0 1600;M 0 0 Q -0.27472527472527475 800 0 1600;M 0 0 Q 0.2717391304347826 800 0 1600;M 0 0 Q -0.26881720430107525 800 0 1600;M 0 0 Q 0.26595744680851063 800 0 1600;M 0 0 Q -0.2631578947368421 800 0 1600;M 0 0 Q 0.2604166666666667 800 0 1600;M 0 0 Q -0.25773195876288657 800 0 1600;M 0 0 Q 0.25510204081632654 800 0 1600;M 0 0 Q -0.25252525252525254 800 0 1600;M 0 0 Q 0.25 800 0 1600'
+               dur="52.14s"
+               repeatCount="1"/>
+            </path>
+            <rect width="25" height="4400" y="1600" x="100" fill='#b8b8b8'/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={100-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-5' data-tune={guitarTuning[4]} datacurrenttune={pitchBinding[4]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('datacurrenttune'));console.log('attack');console.log(e.target.parentElement);e.target.parentElement.querySelector("path#string4wiggly").children[0].beginElement();console.log(e.target.parentElement.querySelector("path#string4wiggly").children[0])}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}}/>
             <g transform='rotate(180) translate(-100, -5500) scale(-1,1)'>
                {/* <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={4} fill='transparent' fillOpacity="0" note={guitarTuning[4]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[4] = guitarTuning[4];setPitchBinding(t_pitchBinding)}}/> */}
                { stringsTriggers[4] }
             </g>
          </g>
          <g transform='rotate(-0.55)'>
-            <rect width="27.5" height="5800" x="0" fill='#b8b8b8'/>
-            <rect width={(2**(1/12))**1*75} height="1650" x={0-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-6' data-tune={guitarTuning[5]} data-currentTune={pitchBinding[5]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('data-currentTune'));console.log('attack')}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('data-currentTune'));console.log('release')}}}/>
+            <path d="M 0 0 Q 0 0 0 1600" stroke="#b8b8b8" fill="transparent" strokeWidth="27.5" id='string5wiggly' transform="translate(13.75)">
+               <animate
+               attributeName="d"
+               values='M 0 0 Q 50 800 0 1600;M 0 0 Q -25.0 800 0 1600;M 0 0 Q 12.5 800 0 1600;M 0 0 Q -8.333333333333334 800 0 1600;M 0 0 Q 6.25 800 0 1600;M 0 0 Q -5.0 800 0 1600;M 0 0 Q 4.166666666666667 800 0 1600;M 0 0 Q -3.5714285714285716 800 0 1600;M 0 0 Q 3.125 800 0 1600;M 0 0 Q -2.7777777777777777 800 0 1600;M 0 0 Q 2.5 800 0 1600;M 0 0 Q -2.272727272727273 800 0 1600;M 0 0 Q 2.0833333333333335 800 0 1600;M 0 0 Q -1.9230769230769231 800 0 1600;M 0 0 Q 1.7857142857142858 800 0 1600;M 0 0 Q -1.6666666666666667 800 0 1600;M 0 0 Q 1.5625 800 0 1600;M 0 0 Q -1.4705882352941178 800 0 1600;M 0 0 Q 1.3888888888888888 800 0 1600;M 0 0 Q -1.3157894736842106 800 0 1600;M 0 0 Q 1.25 800 0 1600;M 0 0 Q -1.1904761904761905 800 0 1600;M 0 0 Q 1.1363636363636365 800 0 1600;M 0 0 Q -1.0869565217391304 800 0 1600;M 0 0 Q 1.0416666666666667 800 0 1600;M 0 0 Q -1.0 800 0 1600;M 0 0 Q 0.9615384615384616 800 0 1600;M 0 0 Q -0.9259259259259259 800 0 1600;M 0 0 Q 0.8928571428571429 800 0 1600;M 0 0 Q -0.8620689655172413 800 0 1600;M 0 0 Q 0.8333333333333334 800 0 1600;M 0 0 Q -0.8064516129032258 800 0 1600;M 0 0 Q 0.78125 800 0 1600;M 0 0 Q -0.7575757575757576 800 0 1600;M 0 0 Q 0.7352941176470589 800 0 1600;M 0 0 Q -0.7142857142857143 800 0 1600;M 0 0 Q 0.6944444444444444 800 0 1600;M 0 0 Q -0.6756756756756757 800 0 1600;M 0 0 Q 0.6578947368421053 800 0 1600;M 0 0 Q -0.6410256410256411 800 0 1600;M 0 0 Q 0.625 800 0 1600;M 0 0 Q -0.6097560975609756 800 0 1600;M 0 0 Q 0.5952380952380952 800 0 1600;M 0 0 Q -0.5813953488372093 800 0 1600;M 0 0 Q 0.5681818181818182 800 0 1600;M 0 0 Q -0.5555555555555556 800 0 1600;M 0 0 Q 0.5434782608695652 800 0 1600;M 0 0 Q -0.5319148936170213 800 0 1600;M 0 0 Q 0.5208333333333334 800 0 1600;M 0 0 Q -0.5102040816326531 800 0 1600;M 0 0 Q 0.5 800 0 1600;M 0 0 Q -0.49019607843137253 800 0 1600;M 0 0 Q 0.4807692307692308 800 0 1600;M 0 0 Q -0.4716981132075472 800 0 1600;M 0 0 Q 0.46296296296296297 800 0 1600;M 0 0 Q -0.45454545454545453 800 0 1600;M 0 0 Q 0.44642857142857145 800 0 1600;M 0 0 Q -0.43859649122807015 800 0 1600;M 0 0 Q 0.43103448275862066 800 0 1600;M 0 0 Q -0.423728813559322 800 0 1600;M 0 0 Q 0.4166666666666667 800 0 1600;M 0 0 Q -0.4098360655737705 800 0 1600;M 0 0 Q 0.4032258064516129 800 0 1600;M 0 0 Q -0.3968253968253968 800 0 1600;M 0 0 Q 0.390625 800 0 1600;M 0 0 Q -0.38461538461538464 800 0 1600;M 0 0 Q 0.3787878787878788 800 0 1600;M 0 0 Q -0.373134328358209 800 0 1600;M 0 0 Q 0.36764705882352944 800 0 1600;M 0 0 Q -0.36231884057971014 800 0 1600;M 0 0 Q 0.35714285714285715 800 0 1600;M 0 0 Q -0.352112676056338 800 0 1600;M 0 0 Q 0.3472222222222222 800 0 1600;M 0 0 Q -0.3424657534246575 800 0 1600;M 0 0 Q 0.33783783783783783 800 0 1600;M 0 0 Q -0.3333333333333333 800 0 1600;M 0 0 Q 0.32894736842105265 800 0 1600;M 0 0 Q -0.3246753246753247 800 0 1600;M 0 0 Q 0.32051282051282054 800 0 1600;M 0 0 Q -0.31645569620253167 800 0 1600;M 0 0 Q 0.3125 800 0 1600;M 0 0 Q -0.30864197530864196 800 0 1600;M 0 0 Q 0.3048780487804878 800 0 1600;M 0 0 Q -0.30120481927710846 800 0 1600;M 0 0 Q 0.2976190476190476 800 0 1600;M 0 0 Q -0.29411764705882354 800 0 1600;M 0 0 Q 0.29069767441860467 800 0 1600;M 0 0 Q -0.28735632183908044 800 0 1600;M 0 0 Q 0.2840909090909091 800 0 1600;M 0 0 Q -0.2808988764044944 800 0 1600;M 0 0 Q 0.2777777777777778 800 0 1600;M 0 0 Q -0.27472527472527475 800 0 1600;M 0 0 Q 0.2717391304347826 800 0 1600;M 0 0 Q -0.26881720430107525 800 0 1600;M 0 0 Q 0.26595744680851063 800 0 1600;M 0 0 Q -0.2631578947368421 800 0 1600;M 0 0 Q 0.2604166666666667 800 0 1600;M 0 0 Q -0.25773195876288657 800 0 1600;M 0 0 Q 0.25510204081632654 800 0 1600;M 0 0 Q -0.25252525252525254 800 0 1600;M 0 0 Q 0.25 800 0 1600'
+               dur="57.14s"
+               repeatCount="1"/>
+            </path>
+
+  {/* <rect width="1000" height="1000">
+    <animate
+      attributeName="rx"
+      values="0;5;0"
+      dur="10s"
+      repeatCount="indefinite" />
+  </rect> */}
+
+            <rect width="27.5" height="4200" x="0" y="1600" fill='#b8b8b8'/>
+            <rect width={(2**(1/12))**1*75} height="1650" x={0-((2**(1/12))**1*75)/3} fill='transparent' fillOpacity="0" id='string-6' data-tune={guitarTuning[5]} datacurrenttune={pitchBinding[5]} onMouseDownCapture={(e)=>{if (e.target.getAttribute("isPressed") == undefined) {e.target.setAttribute("isPressed",'');Tone.start();guitar.triggerAttack(e.target.getAttribute('datacurrenttune'));console.log('attack');console.log(e.target.parentElement);e.target.parentElement.querySelector("path#string5wiggly").children[0].beginElement();console.log(e.target.parentElement.querySelector("path#string5wiggly").children[0])}}} onMouseUpCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')}}} onMouseOutCapture={(e)=>{if (e.target.getAttribute("isPressed") != undefined) {e.target.removeAttribute("isPressed");Tone.start();guitar.triggerRelease(e.target.getAttribute('datacurrenttune'));console.log('release')};}}/>
             <g transform='rotate(180) translate(0, -5500) scale(-1,1)'>
                {/* <rect height={distance_to_nut*((1-1/((2**(1/12))**0))-(1-1/((2**(1/12))**(0-1))))} width={(2**(1/12))**1*30*2} x={-((2**(1/12))**0*30/2)} y={-320} key={5} fill='transparent' fillOpacity="0" note={guitarTuning[5]} onClickCapture={(e)=>{let t_pitchBinding = [...pitchBinding];t_pitchBinding[5] = guitarTuning[5];setPitchBinding(t_pitchBinding)}}/> */}
                { stringsTriggers[5] }

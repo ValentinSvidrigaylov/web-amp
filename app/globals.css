@@ -71,8 +71,28 @@
     --card-rgb: 100, 100, 100;
     --card-border-rgb: 200, 200, 200;
 
-    --background: #242424;
+    /* --background: #242424; */
   }
+}
+
+html[data-theme="dark"] {
+  --background: #242424;
+  --nav-background: #cfcfcf;
+  --color: white;
+}
+
+html[data-theme="dark"] a, #CS {
+  --link-color: #3284e2;
+}
+
+html[data-theme="light"] {
+  --background: #cfcfcf;
+  --nav-background: #242424;
+  --color: black;
+}
+
+html[data-theme="light"] a, #CS {
+  --link-color: #1f7ae2;
 }
 
 * {
@@ -88,7 +108,7 @@ html, body {
 }
 
 body {
-  color: white !important;
+  color: var(--color) !important;
   /* background: linear-gradient(
       to bottom,
       transparent,
@@ -99,12 +119,16 @@ body {
 }
 
 input {
-  color: white !important;
-  background-color: #3b3b3b ;
+  color: var(--color) !important;
+  background-color: color-mix(in srgb, var(--background) 80%, white);
 }
 
+/* input[type="file"] {
+  color: white !important;
+} */
+
 a {
-  color: #6da9ee !important;
+  color: var(--link-color) !important;
   text-decoration: none !important;
 }
 
@@ -113,7 +137,11 @@ a:hover {
 }
 
 a:visited {
-  color: #6d85ee !important;
+  color: color-mix(in srgb, var(--link-color) 95%, black) !important;
+}
+
+html {
+  overflow: hidden;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -194,12 +222,13 @@ button {
 } 
 
 ::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--background) 50%, white);
+  /* background-color: color-mix(in srgb, var(--background) 50%, white); */
+  background-color: var(--nav-background);
   border-radius: 15px;  
 }
 
 ::-webkit-scrollbar-corner {
-  background-color: color-mix(in srgb, var(--background) 90%, white);
+  background-color: color-mix(in srgb, var(--nav-background) 90%, white);
 }
 
 /* Buttons */
@@ -278,3 +307,30 @@ button {
   height: 100%;
  }
 
+/* svg path#string1wiggly {
+  d: path("M 0 0 Q 50 800 0 1600") !important;
+  transition: 30s;
+  animation: stringwiggle 10.5s linear alternate infinite;
+}
+
+@keyframes stringwiggle {
+  from {
+    d: path("M 0 0 Q 50 800 0 1600") !important;
+  }
+
+  to {
+    d: path("M 0 0 Q 0 0 0 1600") !important;
+  }
+} */
+
+#SF + .track + label {
+  margin-left: 1rem;
+}
+
+html #CS {
+  width: 5rem;
+  height: 5rem;
+  border: 3px solid black;
+  background: var(--link-color) !important;
+  z-index: 10;
+}

@@ -12,3 +12,26 @@
     width: 100%;
     height: 100%;
 }
+
+#samples {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+#samples > * {
+    border: 3px solid var(--nav-background);
+    border-radius: 15% !important;
+    min-width: 20vw;
+    max-width: 75vw;
+    margin: 0.6rlh;
+}
+
+#BPMTapper {
+    margin: 0.4rlh;
+}
+
+#BPMTapper > * {
+    margin: 0.2rlh auto;
+}
