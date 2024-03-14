@@ -2,6 +2,7 @@
 import '../css/theme.css'
 
 export default function ThemeButton() {
+  if (typeof window != "undefined") {
     const storageKey = 'theme-preference'
 
 const onClick = () => {
@@ -14,8 +15,8 @@ const onClick = () => {
 }
 
 const getColorPreference = () => {
-  if (localStorage.getItem(storageKey))
-    return localStorage.getItem(storageKey)
+  if (localStorage?.getItem(storageKey))
+    return localStorage?.getItem(storageKey)
   else
     return window.matchMedia('(prefers-color-scheme: dark)').matches
       ? 'dark'
@@ -23,7 +24,7 @@ const getColorPreference = () => {
 }
 
 const setPreference = () => {
-  localStorage.setItem(storageKey, theme.value)
+  localStorage?.setItem(storageKey, theme.value)
   reflectPreference()
 }
 
@@ -61,6 +62,7 @@ window
     theme.value = isDark ? 'dark' : 'light'
     setPreference()
   })
+  }
     return (
         <div style={{transition: "0.4s ease", float: "left", padding: "0.5rlh"}}> 
           <button className="theme-toggle" id="theme-toggle" title="Toggles light &amp; dark" aria-label="light" aria-live="polite">
