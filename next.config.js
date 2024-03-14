@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 const repo = 'web-amp'
-const assetPrefix = `/${repo}/`
+const assetPrefix = `/${repo}`
 const basePath = `/${repo}`
 
 const nextConfig = {
