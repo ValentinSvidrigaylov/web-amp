@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { getKeysByValue } from '../libs/essentials.js';
 import '../css/synth.css'
-import { render } from 'react-dom';
 import { notStrictEqual } from 'assert';
 
 export default function Synth() {
@@ -18,6 +17,7 @@ const [keysLength, setKeysLength] = useState();
 const [renderSynth, setRenderSynth] = useState(()=>()=>{});
 const [test, setTest] = useState(()=>()=>{console.log('old')})
 const [BPM, setBPM] = useState(0);
+const [lastTap, setLastTap] = useState(0);
 let overoctaves = 0;
 // useEffect(()=>{
     
@@ -648,15 +648,13 @@ useEffect(()=>{
             localStorage.setItem("samples", JSON.stringify({...JSON.parse(localStorage.getItem("samples")), [sampleName ? sampleName : noteName]: noteName}));
         }
 
-        let last_tap;
-
         function setBPMtext(e) {
             console.log(e)
-            console.log(last_tap)
-            if (last_tap) {
-                setBPM(Math.round(1000*60/(e.timeStamp-last_tap)));
+            console.log(lastTap)
+            if (lastTap) {
+                setBPM(Math.round(1000*60/(e.timeStamp-lastTap)));
             }
-            last_tap = e.timeStamp
+            setLastTap(e.timeStamp);
         }
 
         useEffect(()=>{

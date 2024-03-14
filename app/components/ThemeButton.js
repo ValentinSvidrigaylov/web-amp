@@ -1,7 +1,7 @@
+'use client'
 import '../css/theme.css'
 
 export default function ThemeButton() {
-  if (typeof window != "undefined") {
     const storageKey = 'theme-preference'
 
 const onClick = () => {
@@ -61,7 +61,6 @@ window
     theme.value = isDark ? 'dark' : 'light'
     setPreference()
   })
-  }
     return (
         <div style={{transition: "0.4s ease", float: "left", padding: "0.5rlh"}}> 
           <button className="theme-toggle" id="theme-toggle" title="Toggles light &amp; dark" aria-label="light" aria-live="polite">

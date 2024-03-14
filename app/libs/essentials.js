@@ -66,3 +66,7 @@ Number.prototype.fromExponent = function() {
     while (mag--) z += '0';
     return str + z;
   }
+
+  Number.prototype.clamp = function(min, max) {
+    return Math.min(Math.max(this, min), max);
+  };

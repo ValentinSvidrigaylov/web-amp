@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import React, { Fragment, useEffect, useCallback, useState } from "react";
 import { Unity, useUnityContext } from "react-unity-webgl";
 import { eventNames } from 'process';
+import { type } from 'os';
 
 export default function History() {
   const [popups,setPopups] = useState({});
@@ -58,7 +59,7 @@ export default function History() {
       }
 
   useEffect(()=>{
-    if (isLoaded) {
+    if (isLoaded&&typeof window != "undefined") {
       document.querySelector('canvas').addEventListener("click", handleClick);
       trackedImage = document.querySelector('img#trackedImage');
       mouseOnImage = { x:0, y:0};
@@ -121,11 +122,13 @@ export default function History() {
 
     const handleUpdateMarkerPosition = useCallback((x, y) => {
       // console.log(`${x},${y}`);
-      characterDiv = document.getElementById("character");
-      trackedImage = document.querySelector('img#trackedImage');  
-      characterDiv.style.visibility = "visible";
-      characterDiv.style.left = `${trackedImage.clientWidth*(y*0.01 - characterMarkerSizePercentage*0.5)}px`;
-      characterDiv.style.top = `${trackedImage.clientHeight*(x*0.01 - characterMarkerSizePercentage*0.5)}px`;
+      if (typeof window != "undefined"&&isLoaded) {
+        characterDiv = document.getElementById("character");
+        trackedImage = document.querySelector('img#trackedImage');  
+        characterDiv.style.visibility = "visible";
+        characterDiv.style.left = `${trackedImage.clientWidth*(y*0.01 - characterMarkerSizePercentage*0.5)}px`;
+        characterDiv.style.top = `${trackedImage.clientHeight*(x*0.01 - characterMarkerSizePercentage*0.5)}px`;
+      }
     }, []);
 
     // let active_popups = [];
@@ -670,8 +673,10 @@ export default function History() {
     },[popups]);
 
     useEffect(()=>()=>{
-      window.onresize = null;
-      window.onkeydown = null;      
+      if (typeof window != "undefined") {
+        window.onresize = null;
+        window.onkeydown = null;
+      }
     },[])
 // const [octave, setOctave] = useState(); //init octave
 // console.log("initial octave: ", octave)

@@ -35,6 +35,7 @@ const [tuner, setTuner] = useState();
 const [chordShapesShown, setChordShapesShown] = useState(false);
 const [isSF, setIsSF] = useState(false);
 const [isTuner, setIsTuner] = useState();
+const [gaugePosition, setGaugePosition] = useState();
 const [volume, setVolume] = useState();
 const [isVolume, setIsVolume] = useState(false);
 const [distortion, setDistortion] = useState();
@@ -497,7 +498,7 @@ function changeBitcrusherValue(value) {
   let newVal = new Tone.BitCrusher({bits: value, wet: 1});
 //   bitcrusher.wet.value = 1;
   setBitcrusher(newVal);
-  changeEffectVal(newVal);
+  changeEffectVal(newVal, bitcrusher);
 }
 
 function addBitcrusher(value) {
@@ -676,6 +677,8 @@ useEffect(()=>{
 //     map[e.keyCode] = e.type == 'keydown';
 //     /* insert conditional here */
 // }
+useEffect(()=>{
+if (typeof window != "undefined") {
 console.log(stringsAmount)
    window.onkeydown = (e)=>{
       // e.preventDefault()
@@ -1142,6 +1145,7 @@ window.onkeyup = (e)=>{
       // }
    }
 }
+}})
 
 // let current_ir;
 
@@ -1201,7 +1205,6 @@ function renderIRs() {
 
 useEffect(()=>{
    console.log(current_ir)
-   console.log(window.document.readyState)
    console.log(document.getElementById("resetir"))
    if (document.readyState === 'complete'&&document.getElementById("resetir")&&mic!=undefined) {
       console.log("current_ir update")
@@ -1243,6 +1246,7 @@ function renderTuner() {
       console.log("mic open");
       // print the incoming mic levels in decibels
       setInterval(() => {
+         
    //       let unordered = fft.getValue();
    // //         let unordered = Object.entries(fft.getValue()).map(
    // //    ([prop, propValue]) => { return [propValue, prop]; }
@@ -1270,17 +1274,28 @@ function renderTuner() {
    console.log(Object.entries(mapped).filter(e=>e[1]==max))
    // setTuner(JSON.stringify(Object.entries(mapped).filter(e=>e[1]==max)))
    let cur_frequency = Tone.Frequency(Number(Object.entries(mapped).filter(e=>e[1]==max)[0][0]));
-   setTuner(`${cur_frequency != 0 ? cur_frequency.toNote() : "play some note to detect its pitch"}, difference: ${cur_frequency != 0 ? cur_frequency-Tone.Frequency(cur_frequency.toNote()) : ""}hz`)
+   if (cur_frequency == 0 || cur_frequency < 0) {
+      setTuner("play a note to find its pitch")
+      setGaugePosition(50);
+      return;
+   }
+   let low_note = (Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())-1))-cur_frequency)/(Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())-1))-Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote()))))
+   let high_note = (Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())+1))-cur_frequency)/(Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())+1))-Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote()))))
+   setGaugePosition(low_note < high_note ? (low_note.clamp(0,1)/2)*100 : low_note==high_note ? 50 : (1-high_note.clamp(0,1)/2)*100);
+   setTuner(`${cur_frequency.toNote()}`)
    }, 500);
    }).catch(e => {
       // promise is rejected when the user doesn't have or allow mic access
       console.log("mic not open");
    });
-   Tone.start()
+}
+
+function changeA4Value(value) {
+   Tone.Frequency.A4(value);
 }
 
 useEffect(()=>{
-   if (window) {
+   if (typeof window != "undefined") {
       //changePos section
       // {
       //    let handlePositionChange = (effect, amount) => {
@@ -1321,8 +1336,10 @@ useEffect(()=>{
 },[mic])
 
 useEffect(()=> () => {
-   window.onkeydown = null;
-   window.onkeyup = null;
+   if (typeof window != "undefined") {
+      window.onkeydown = null;
+      window.onkeyup = null;
+   }
 },[]);
 
 useEffect(()=>{
@@ -1395,7 +1412,7 @@ let testarr = [testvar]
 useState(()=>{
    console.log(testvar)
    console.log("testarr:",testarr)
-   if (window&&document.querySelector("#testel")) {
+   if (typeof window != "undefined"&&document.querySelector("#testel")) {
       let el = document.querySelector("#testel")
       el.textContent=testarr[0];
       console.log(testarr)
@@ -1447,8 +1464,32 @@ function testFunction() {
             <span>Guitar tuner</span>
             <div id="tuner" style={{ wordBreak: "break-all" }}>
                <div className="row effect">
-                  { isTuner ? tuner : "Turn on the tuner to be able to tune your instrument" }   
                   <EffectToggle label="Tuner" id="tuner" checked={false} change={addTuner} trueBypass={isTuner} setTrueBypass={setIsTuner}/>
+                  <EffectValue label="A4Value" id="a4value" defaultValue={440} change={changeA4Value} min={430} max={450} trueBypass={isTuner} setTrueBypass={setIsTuner} strict={[1,1]} step={1}/>
+                  { isTuner && <div class="gauge" style={{ "--gauge-bg": "color-mix(in srgb, var(--nav-background) 85%, white)", "--gauge-value": gaugePosition, "--gauge-display-value": `${Math.round(gaugePosition < 50 ? gaugePosition*2 : 200 - 2*gaugePosition)}`, width: "auto", margin: "0.5rlh auto" }}>
+                     <div class="ticks">
+                        <div class="tithe" style={{ "--gauge-tithe-tick":1 }}></div>
+                        <div class="tithe" style={{ "--gauge-tithe-tick":2 }}></div>
+                        <div class="tithe" style={{ "--gauge-tithe-tick":3 }}></div>
+                        <div class="tithe" style={{ "--gauge-tithe-tick":4 }}></div>
+                        <div class="tithe" style={{ "--gauge-tithe-tick":6 }}></div>
+                        <div class="tithe" style={{ "--gauge-tithe-tick":7 }}></div>
+                        <div class="tithe" style={{ "--gauge-tithe-tick":8 }}></div>
+                        <div class="tithe" style={{ "--gauge-tithe-tick":9 }}></div>
+                        <div class="min"></div>
+                        <div class="mid"></div>
+                        <div class="max"></div>
+                     </div>
+                     <div class="tick-circle">
+                     <span style={{ textAlign: "center", width: "100%", textAlign: "center", position: "absolute", bottom: "0", wordBreak: "keep-all", padding: "0 1rlh" }}>{ isTuner ? <h3>{ tuner }</h3> : "Turn on the tuner to be able to tune your instrument" }</span><br/>
+                     </div>
+                     <div class="needle">
+                        <div class="needle-head"></div>
+                     </div>
+                     <div class="labels">
+                        <div class="value-label"></div>
+                     </div>
+                     </div> }
                </div>
             </div>
       </div>
