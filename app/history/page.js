@@ -122,7 +122,7 @@ export default function History() {
 
     const handleUpdateMarkerPosition = useCallback((x, y) => {
       // console.log(`${x},${y}`);
-      if (typeof window != "undefined"&&isLoaded) {
+      if (typeof window != "undefined") {
         characterDiv = document.getElementById("character");
         trackedImage = document.querySelector('img#trackedImage');  
         characterDiv.style.visibility = "visible";
@@ -689,7 +689,7 @@ return (
             <span>Electric guitars brief showcase</span>
         </div>
         <div className="center-block">
-          <span style={{textAlign: "center", display:"block", marginLeft: "auto", marginRight: "auto", padding: "2rem"}}>*press f to enter fullscreen mode, double click escape button to exit</span>
+          <span className={styles.description} style={{textAlign: "center", display:"block", marginLeft: "auto", marginRight: "auto", padding: "2rem"}}>*press f to enter fullscreen mode, double click escape button to exit,<br/>*map is clickable, after founing new spot it will appear on the map</span>
           <input type="text" style={{display: "block", marginLeft: "auto", marginRight: "auto"}} disabled/>
           {loadingProgression<1 && <span style={{textAlign: "center", display:"block", marginLeft: "auto", marginRight: "auto", padding: "2rem"}}>Loading...{(loadingProgression*100).toFixed(2)}</span>}
           <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", padding: "0 !important", margin: "0 !important", maxWidth: "80vw"}}>

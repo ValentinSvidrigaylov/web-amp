@@ -23,9 +23,9 @@ function noteToInt (note) {return notesSeqeunce.indexOf(note.replace(/\d+/.exec(
 function intToNote (int) {return notesSeqeunce[int%12]+~~(int/12)};
 let pb_changed = false;
 
-Tone.UserMedia.debug = true
+// Tone.UserMedia.debug = true
 Tone.context.lookAhead = 0;
-console.log(Tone.UserMedia.debug)
+// console.log(Tone.UserMedia.debug)
 const [mic, setMic] = useState();
 
 const [testvar, setTestvar] = useState("a");
@@ -36,6 +36,7 @@ const [chordShapesShown, setChordShapesShown] = useState(false);
 const [isSF, setIsSF] = useState(false);
 const [isTuner, setIsTuner] = useState();
 const [gaugePosition, setGaugePosition] = useState();
+const [isTunerInit, setIsTunerInit] = useState(false);
 const [volume, setVolume] = useState();
 const [isVolume, setIsVolume] = useState(false);
 const [distortion, setDistortion] = useState();
@@ -1145,7 +1146,7 @@ window.onkeyup = (e)=>{
       // }
    }
 }
-}})
+}},[])
 
 // let current_ir;
 
@@ -1234,19 +1235,31 @@ function renderChords() {
    }
 }
 
+useEffect(()=>{
+   window.isTuner_c = isTuner;
+   // console.log(window.isTuner_c);
+},[isTuner])
+
 function renderTuner() {
    // let tuner = document.getElementById("tuner");
-   if (typeof mic == "undefined") {
-      return;
-   }
+   // console.log(isTuner_c)
+   let mic = new Tone.UserMedia();
+   mic.output = new Tone.Mono();
+   // mic.toDestination()
+   // console.log(mic)
    let fft = new Tone.FFT({size:16384});
    mic.connect(fft)
    mic.open().then(() => {
       // promise resolves when input is available
       console.log("mic open");
       // print the incoming mic levels in decibels
+      if (!isTunerInit) {
+         setIsTunerInit(true);
+      } else {
+         return;
+      }
       setInterval(() => {
-         
+         // console.log(window.isTuner_c);
    //       let unordered = fft.getValue();
    // //         let unordered = Object.entries(fft.getValue()).map(
    // //    ([prop, propValue]) => { return [propValue, prop]; }
@@ -1271,7 +1284,7 @@ function renderTuner() {
    // console.log([1].map(index => fft.getFrequencyOfIndex(index)));
    let t = Object.values(mapped);
    let max = Math.max(...t);
-   console.log(Object.entries(mapped).filter(e=>e[1]==max))
+   // console.log(Object.entries(mapped).filter(e=>e[1]==max))
    // setTuner(JSON.stringify(Object.entries(mapped).filter(e=>e[1]==max)))
    let cur_frequency = Tone.Frequency(Number(Object.entries(mapped).filter(e=>e[1]==max)[0][0]));
    if (cur_frequency == 0 || cur_frequency < 0) {
@@ -1291,11 +1304,11 @@ function renderTuner() {
 }
 
 function changeA4Value(value) {
-   Tone.Frequency.A4(value);
+   Tone.Frequency.A4 = value;
 }
 
 useEffect(()=>{
-   if (typeof window != "undefined") {
+   if (typeof window != "undefined"&&typeof mic != "undefined") {
       //changePos section
       // {
       //    let handlePositionChange = (effect, amount) => {
@@ -1464,30 +1477,30 @@ function testFunction() {
             <span>Guitar tuner</span>
             <div id="tuner" style={{ wordBreak: "break-all" }}>
                <div className="row effect">
-                  <EffectToggle label="Tuner" id="tuner" checked={false} change={addTuner} trueBypass={isTuner} setTrueBypass={setIsTuner}/>
+                  <EffectToggle label="Tuner (not affected by other effects)" id="tuner" checked={false} change={addTuner} trueBypass={isTuner} setTrueBypass={setIsTuner}/>
                   <EffectValue label="A4Value" id="a4value" defaultValue={440} change={changeA4Value} min={430} max={450} trueBypass={isTuner} setTrueBypass={setIsTuner} strict={[1,1]} step={1}/>
-                  { isTuner && <div class="gauge" style={{ "--gauge-bg": "color-mix(in srgb, var(--nav-background) 85%, white)", "--gauge-value": gaugePosition, "--gauge-display-value": `${Math.round(gaugePosition < 50 ? gaugePosition*2 : 200 - 2*gaugePosition)}`, width: "auto", margin: "0.5rlh auto" }}>
-                     <div class="ticks">
-                        <div class="tithe" style={{ "--gauge-tithe-tick":1 }}></div>
-                        <div class="tithe" style={{ "--gauge-tithe-tick":2 }}></div>
-                        <div class="tithe" style={{ "--gauge-tithe-tick":3 }}></div>
-                        <div class="tithe" style={{ "--gauge-tithe-tick":4 }}></div>
-                        <div class="tithe" style={{ "--gauge-tithe-tick":6 }}></div>
-                        <div class="tithe" style={{ "--gauge-tithe-tick":7 }}></div>
-                        <div class="tithe" style={{ "--gauge-tithe-tick":8 }}></div>
-                        <div class="tithe" style={{ "--gauge-tithe-tick":9 }}></div>
-                        <div class="min"></div>
-                        <div class="mid"></div>
-                        <div class="max"></div>
+                  { isTuner && <div className="gauge" style={{ "--gauge-bg": "color-mix(in srgb, var(--nav-background) 85%, white)", "--gauge-value": gaugePosition, "--gauge-display-value": `${Math.round(gaugePosition < 50 ? gaugePosition*2 : 200 - 2*gaugePosition)}`, width: "auto", margin: "0.5rlh auto" }}>
+                     <div className="ticks">
+                        <div className="tithe" style={{ "--gauge-tithe-tick":1 }}></div>
+                        <div className="tithe" style={{ "--gauge-tithe-tick":2 }}></div>
+                        <div className="tithe" style={{ "--gauge-tithe-tick":3 }}></div>
+                        <div className="tithe" style={{ "--gauge-tithe-tick":4 }}></div>
+                        <div className="tithe" style={{ "--gauge-tithe-tick":6 }}></div>
+                        <div className="tithe" style={{ "--gauge-tithe-tick":7 }}></div>
+                        <div className="tithe" style={{ "--gauge-tithe-tick":8 }}></div>
+                        <div className="tithe" style={{ "--gauge-tithe-tick":9 }}></div>
+                        <div className="min"></div>
+                        <div className="mid"></div>
+                        <div className="max"></div>
                      </div>
-                     <div class="tick-circle">
+                     <div className="tick-circle">
                      <span style={{ textAlign: "center", width: "100%", textAlign: "center", position: "absolute", bottom: "0", wordBreak: "keep-all", padding: "0 1rlh" }}>{ isTuner ? <h3>{ tuner }</h3> : "Turn on the tuner to be able to tune your instrument" }</span><br/>
                      </div>
-                     <div class="needle">
-                        <div class="needle-head"></div>
+                     <div className="needle">
+                        <div className="needle-head"></div>
                      </div>
-                     <div class="labels">
-                        <div class="value-label"></div>
+                     <div className="labels">
+                        <div className="value-label"></div>
                      </div>
                      </div> }
                </div>

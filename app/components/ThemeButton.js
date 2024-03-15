@@ -1,8 +1,9 @@
 'use client'
+import { useEffect } from 'react'
 import '../css/theme.css'
 
 export default function ThemeButton() {
-  if (typeof window != "undefined") {
+  
     const storageKey = 'theme-preference'
 
 const onClick = () => {
@@ -15,26 +16,32 @@ const onClick = () => {
 }
 
 const getColorPreference = () => {
-  if (localStorage?.getItem(storageKey))
-    return localStorage?.getItem(storageKey)
-  else
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light'
+  if (typeof localStorage != "undefined" && typeof window != "undefined") {
+    if (localStorage?.getItem(storageKey))
+      return localStorage?.getItem(storageKey)
+    else
+      return window?.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light'
+  }
 }
 
 const setPreference = () => {
-  localStorage?.setItem(storageKey, theme.value)
-  reflectPreference()
+  if (typeof localStorage != "undefined") {
+    localStorage?.setItem(storageKey, theme.value)
+    reflectPreference()
+  }
 }
 
 const reflectPreference = () => {
-  document.firstElementChild
-    .setAttribute('data-theme', theme.value);
-  
-  document
-    .querySelector('#theme-toggle')
-    ?.setAttribute('aria-label', theme.value)
+  if (typeof window != "undefined") {
+    document.firstElementChild
+      .setAttribute('data-theme', theme.value);
+    
+    document
+      .querySelector('#theme-toggle')
+      ?.setAttribute('aria-label', theme.value)
+  }
 }
 
 const theme = {
@@ -43,7 +50,7 @@ const theme = {
 
 // set early so no page flashes / CSS is made aware
 reflectPreference()
-
+if (typeof window != "undefined") {
 window.onload = () => {
   // set on load so screen readers can see latest value on the button
   reflectPreference()
@@ -54,15 +61,17 @@ window.onload = () => {
     .addEventListener('click', onClick)
     console.log(111)
 }
-
+}
 // sync with system changes
-window
-  .matchMedia('(prefers-color-scheme: dark)')
-  .addEventListener('change', ({matches:isDark}) => {
-    theme.value = isDark ? 'dark' : 'light'
-    setPreference()
-  })
+useEffect(()=>{
+  if (typeof window != "undefined") {
+    window?.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ({matches:isDark}) => {
+      theme.value = isDark ? 'dark' : 'light'
+      setPreference()
+    })
   }
+},[])
+
     return (
         <div style={{transition: "0.4s ease", float: "left", padding: "0.5rlh"}}> 
           <button className="theme-toggle" id="theme-toggle" title="Toggles light &amp; dark" aria-label="light" aria-live="polite">

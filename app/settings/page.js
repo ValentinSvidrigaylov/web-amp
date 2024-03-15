@@ -150,10 +150,10 @@ useEffect(()=>{
 
   return (
     <main className={styles.main}>
-      <h5 className='m-4'>*Clearing browser&apos;s cache or sites&apos; data will erase these settings</h5>
       <h2>Settings</h2>
+      <h5 className='m-4'>*Clearing browser&apos;s cache or sites&apos; data will erase these settings</h5>
       <div className={styles.description}>
-        Please, write full name of key (if it is not one letter)
+        Please, write full name of key (if it is not one letter).<br/> All of these bindings are clickable so you can use instruments without it
       </div>
       <h2>Key mapping</h2>
       <h3>Synth</h3>

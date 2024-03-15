@@ -154,7 +154,7 @@ html {
 button {
   padding: 1em;
   border-radius: 20% !important;
-  box-shadow: #f7f7f7 0 0 4px 4px;
+  box-shadow: var(--nav-background) 0 0 4px 4px;
 }
 
 .col {
@@ -175,7 +175,7 @@ button {
 .effect {
   border: 3px solid white;
   border-radius: 15px;
-  box-shadow: #f7f7f7 0px 0px 20px 1px;
+  box-shadow: var(--nav-background) 0px 0px 20px 1px;
   margin: 1rem;
 }
 
