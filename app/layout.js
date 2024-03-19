@@ -1,8 +1,8 @@
 'use client';
+import ThemeButton from './components/ThemeButton.js'
 import './globals.css'
 import 'bootstrap/dist/css/bootstrap.css'
 import Navbar from './components/Navbar.js'
-import ThemeButton from './components/ThemeButton.js'
 
 // export const metadata = {
 //   title: 'Create Next App',

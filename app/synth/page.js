@@ -697,7 +697,7 @@ useEffect(()=>{
             </div>
         </div>
         <div id="sampler" style={{ border: "3px solid black", borderRadius: "15px", background: "color-mix(in srgb, var(--background) 90%, white)", zIndex: "2147483647 !important", margin: "1.5rlh 0", padding: "0.5rlh", width: "80vw" }}>
-            <span style={{textAlign: "center", display: "block", margin: "0.4rlh auto"}}>Drum machine</span>
+            <span style={{textAlign: "center", display: "block", margin: "0.4rlh auto"}}>Drum machine (not implemented)</span>
             <div id="samplerouter" style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
                 <div id="BPMTapper">
                     <input onChangeCapture={(e)=>{setBPM(e.target.value)}} value={ BPM }/>

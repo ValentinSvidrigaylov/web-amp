@@ -28,7 +28,7 @@ Tone.context.lookAhead = 0;
 // console.log(Tone.UserMedia.debug)
 const [mic, setMic] = useState();
 
-const [testvar, setTestvar] = useState("a");
+// const [testvar, setTestvar] = useState("a");
 
 const [SF, setSF] = useState();
 const [tuner, setTuner] = useState();
@@ -88,8 +88,8 @@ useEffect(()=>{
   setMic(mic_t);
   setGuitar(new Tone.Sampler({urls: {"C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3",}, release: 1, baseUrl: "./samples/guitar-electric/"}).chain(new Tone.Mono(), Tone.Destination));
   setVolume(new Tone.Volume(10));
-  setDistortion(new Tone.Distortion(10))
-  setGain(new Tone.Gain(250))
+  setDistortion(new Tone.Distortion(5))
+  setGain(new Tone.Gain(20))
   setBitcrusher(new Tone.BitCrusher({bits: 8, wet: 1}))
   setChorus(new Tone.Chorus({frequency: 4, delayTime: 2.5, depth: 1, wet: 1}).start())
   setDelay(new Tone.FeedbackDelay({delayTime: "8n", feedback: .1, wet: 1}))
@@ -678,7 +678,7 @@ useEffect(()=>{
 //     map[e.keyCode] = e.type == 'keydown';
 //     /* insert conditional here */
 // }
-useEffect(()=>{
+
 if (typeof window != "undefined") {
 console.log(stringsAmount)
    window.onkeydown = (e)=>{
@@ -724,16 +724,16 @@ console.log(stringsAmount)
                   return; //since there is no fret on nut
                } else if ((noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1)>=12) {
                   // let frequency = Tone.Frequency(guitarTuning[pressedKeyMapped[i]]).toFrequency() / ((((distance_to_nut*(1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]]))))))) / distance_to_nut);
-                  let frequency = Tone.Frequency(guitarTuning[pressedKeyMapped[i]]).toFrequency() / ((((distance_to_nut*(1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))))) / distance_to_nut))
-                  console.log("length: ",((1-(distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength))
-                  console.log("half Length: ",(((1-(distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength)))
+                  let frequency = Tone.Frequency(guitarTuning[pressedKeyMapped[i]]).toFrequency() / (((((1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]]))))))))
+                  console.log("length: ",((1-(distance_to_nut*(1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength))
+                  console.log("half Length: ",(((1-(distance_to_nut*(1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength)))
                   // console.log("if: ",Tone.Frequency(guitarTuning[strings.indexOf(getKeysByValue(strings, e.key.toLowerCase())[i])+1]).toFrequency())
                   console.log("curnote number: ",noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]))
                   console.log("curnote: ",stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]])
                   console.log("frequency: ",frequency);
                   guitar.triggerAttack(frequency);
                } else {
-                  let frequency = Tone.Frequency(guitarTuning[pressedKeyMapped[i]]).toFrequency() / ((distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))) / distance_to_nut));
+                  let frequency = Tone.Frequency(guitarTuning[pressedKeyMapped[i]]).toFrequency() / (((1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]]))))));
                   // console.log("length: ",(((distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength))
                   console.log("length: ", ((distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])))) / distance_to_nut)))
                   // console.log("divison: ",((((distance_to_nut*(1-1/((2**(1/12))**(noteToInt(stringsOuter.getAttribute("pitchbinding").split(',')[pressedKeyMapped[i]]) - noteToInt(guitarTuning[pressedKeyMapped[i]])+1))) / stringsOuter.children[pressedKeyMapped[i]].children[0].getAttribute("height"))) * scaleLength) / scaleLength))
@@ -1146,7 +1146,8 @@ window.onkeyup = (e)=>{
       // }
    }
 }
-}},[])
+}
+// },[])
 
 // let current_ir;
 
@@ -1240,16 +1241,78 @@ useEffect(()=>{
    // console.log(window.isTuner_c);
 },[isTuner])
 
-function renderTuner() {
+// function renderTuner() {
    // let tuner = document.getElementById("tuner");
    // console.log(isTuner_c)
-   let mic = new Tone.UserMedia();
-   mic.output = new Tone.Mono();
-   // mic.toDestination()
-   // console.log(mic)
-   let fft = new Tone.FFT({size:16384});
-   mic.connect(fft)
-   mic.open().then(() => {
+   // let mic = new Tone.UserMedia();
+   // mic.output = new Tone.Mono();
+   // // mic.toDestination()
+   // // console.log(mic)
+   // let fft = new Tone.FFT({size:16384});
+   // mic.connect(fft)
+   // mic.open().then(() => {
+   //    // promise resolves when input is available
+   //    console.log("mic open");
+   //    // print the incoming mic levels in decibels
+   //    if (!isTunerInit) {
+   //       setIsTunerInit(true);
+   //    } else {
+   //       return;
+   //    }
+   //    setInterval(() => {
+   //       // console.log(window.isTuner_c);
+   // //       let unordered = fft.getValue();
+   // // //         let unordered = Object.entries(fft.getValue()).map(
+   // // //    ([prop, propValue]) => { return [propValue, prop]; }
+   // // // );
+   // //       const result = Object.entries(unordered).map(
+   // //    ([prop, propValue]) => { return [propValue, prop]; }
+   // // );
+   // // let ordered = Object.fromEntries(result);
+   // // ordered = Object.keys(unordered).toSorted().toReversed().reduce(
+   // // (obj, key) => { 
+   // //    obj[key] = unordered[key]; 
+   // //    return obj;
+   // // }, 
+   // // {}
+   // // );
+   // let mappedKeys = Object.keys(fft.getValue()).map(e=>fft.getFrequencyOfIndex(Number(e)));
+   // let mapped_t = fft.getValue();
+   // let mapped = {}
+   // for (let i = 0; i < mappedKeys.length; i++) {
+   //    mapped[mappedKeys[i]]=mapped_t[i]
+   // }
+   // // console.log([1].map(index => fft.getFrequencyOfIndex(index)));
+   // let t = Object.values(mapped);
+   // let max = Math.max(...t);
+   // // console.log(Object.entries(mapped).filter(e=>e[1]==max))
+   // // setTuner(JSON.stringify(Object.entries(mapped).filter(e=>e[1]==max)))
+   // let cur_frequency = Tone.Frequency(Number(Object.entries(mapped).filter(e=>e[1]==max)[0][0]));
+   // if (cur_frequency == 0 || cur_frequency < 0) {
+   //    setTuner("play a note to find its pitch")
+   //    setGaugePosition(50);
+   //    return;
+   // }
+   // let low_note = (Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())-1))-cur_frequency)/(Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())-1))-Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote()))))
+   // let high_note = (Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())+1))-cur_frequency)/(Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())+1))-Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote()))))
+   // setGaugePosition(low_note < high_note ? (low_note.clamp(0,1)/2)*100 : low_note==high_note ? 50 : (1-high_note.clamp(0,1)/2)*100);
+   // setTuner(`${cur_frequency.toNote()}`)
+   // }, 500);
+   // }).catch(e => {
+   //    // promise is rejected when the user doesn't have or allow mic access
+   //    console.log("mic not open");
+   // });
+// }
+
+useEffect(()=>{
+   if (!isTunerInit&&isTuner) {
+      let mic = new Tone.UserMedia();
+      mic.output = new Tone.Mono();
+      // mic.toDestination()
+      // console.log(mic)
+      let fft = new Tone.FFT({size:16384});
+      mic.connect(fft)
+      mic.open().then(() => {
       // promise resolves when input is available
       console.log("mic open");
       // print the incoming mic levels in decibels
@@ -1260,51 +1323,53 @@ function renderTuner() {
       }
       setInterval(() => {
          // console.log(window.isTuner_c);
-   //       let unordered = fft.getValue();
-   // //         let unordered = Object.entries(fft.getValue()).map(
-   // //    ([prop, propValue]) => { return [propValue, prop]; }
-   // // );
-   //       const result = Object.entries(unordered).map(
-   //    ([prop, propValue]) => { return [propValue, prop]; }
-   // );
-   // let ordered = Object.fromEntries(result);
-   // ordered = Object.keys(unordered).toSorted().toReversed().reduce(
-   // (obj, key) => { 
-   //    obj[key] = unordered[key]; 
-   //    return obj;
-   // }, 
-   // {}
-   // );
-   let mappedKeys = Object.keys(fft.getValue()).map(e=>fft.getFrequencyOfIndex(Number(e)));
-   let mapped_t = fft.getValue();
-   let mapped = {}
-   for (let i = 0; i < mappedKeys.length; i++) {
-      mapped[mappedKeys[i]]=mapped_t[i]
+      //       let unordered = fft.getValue();
+      // //         let unordered = Object.entries(fft.getValue()).map(
+      // //    ([prop, propValue]) => { return [propValue, prop]; }
+      // // );
+      //       const result = Object.entries(unordered).map(
+      //    ([prop, propValue]) => { return [propValue, prop]; }
+      // );
+      // let ordered = Object.fromEntries(result);
+      // ordered = Object.keys(unordered).toSorted().toReversed().reduce(
+      // (obj, key) => { 
+      //    obj[key] = unordered[key]; 
+      //    return obj;
+      // }, 
+      // {}
+      // );
+      let mappedKeys = Object.keys(fft.getValue()).map(e=>fft.getFrequencyOfIndex(Number(e)));
+      let mapped_t = fft.getValue();
+      let mapped = {}
+      for (let i = 0; i < mappedKeys.length; i++) {
+         mapped[mappedKeys[i]]=mapped_t[i]
+      }
+      // console.log([1].map(index => fft.getFrequencyOfIndex(index)));
+      let t = Object.values(mapped);
+      let max = Math.max(...t);
+      // console.log(Object.entries(mapped).filter(e=>e[1]==max))
+      // setTuner(JSON.stringify(Object.entries(mapped).filter(e=>e[1]==max)))
+      let cur_frequency = Tone.Frequency(Number(Object.entries(mapped).filter(e=>e[1]==max)[0][0]));
+      if (cur_frequency == 0 || cur_frequency < 0) {
+         setTuner("play a note to find its pitch")
+         setGaugePosition(50);
+         return;
+      }
+      let low_note = (Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())-1))-cur_frequency)/(Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())-1))-Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote()))))
+      let high_note = (Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())+1))-cur_frequency)/(Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())+1))-Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote()))))
+      setGaugePosition(low_note < high_note ? (low_note.clamp(0,1)/2)*100 : low_note==high_note ? 50 : (1-high_note.clamp(0,1)/2)*100);
+      setTuner(`${cur_frequency.toNote()}`)
+      setIsTunerInit(true);
+      }, 500);
+      }).catch(e => {
+         // promise is rejected when the user doesn't have or allow mic access
+         console.log("mic not open");
+      });
    }
-   // console.log([1].map(index => fft.getFrequencyOfIndex(index)));
-   let t = Object.values(mapped);
-   let max = Math.max(...t);
-   // console.log(Object.entries(mapped).filter(e=>e[1]==max))
-   // setTuner(JSON.stringify(Object.entries(mapped).filter(e=>e[1]==max)))
-   let cur_frequency = Tone.Frequency(Number(Object.entries(mapped).filter(e=>e[1]==max)[0][0]));
-   if (cur_frequency == 0 || cur_frequency < 0) {
-      setTuner("play a note to find its pitch")
-      setGaugePosition(50);
-      return;
-   }
-   let low_note = (Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())-1))-cur_frequency)/(Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())-1))-Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote()))))
-   let high_note = (Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())+1))-cur_frequency)/(Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote())+1))-Tone.Frequency(intToNote(noteToInt(cur_frequency.toNote()))))
-   setGaugePosition(low_note < high_note ? (low_note.clamp(0,1)/2)*100 : low_note==high_note ? 50 : (1-high_note.clamp(0,1)/2)*100);
-   setTuner(`${cur_frequency.toNote()}`)
-   }, 500);
-   }).catch(e => {
-      // promise is rejected when the user doesn't have or allow mic access
-      console.log("mic not open");
-   });
-}
+},[isTuner])
 
 function changeA4Value(value) {
-   Tone.Frequency.A4 = value;
+   Tone.FrequencyClass.A4 = value;
 }
 
 useEffect(()=>{
@@ -1344,7 +1409,7 @@ useEffect(()=>{
 
       renderIRs();
       renderChords();
-      renderTuner();
+      // renderTuner();
    }
 },[mic])
 
@@ -1420,24 +1485,24 @@ function handleIR(e) {
     reader.readAsDataURL(f.files[0]);
 }
 
-let testarr = [testvar]
+// let testarr = [testvar]
 
-useState(()=>{
-   console.log(testvar)
-   console.log("testarr:",testarr)
-   if (typeof window != "undefined"&&document.querySelector("#testel")) {
-      let el = document.querySelector("#testel")
-      el.textContent=testarr[0];
-      console.log(testarr)
-      el.onClickCapture = (e) => {e.target.textContent="qwed"}
-   }
-},[testvar])
+// useState(()=>{
+//    console.log(testvar)
+//    console.log("testarr:",testarr)
+//    if (typeof window != "undefined"&&document.querySelector("#testel")) {
+//       let el = document.querySelector("#testel")
+//       el.textContent=testarr[0];
+//       console.log(testarr)
+//       el.onClickCapture = (e) => {e.target.textContent="qwed"}
+//    }
+// },[testvar])
 
-function testFunction() {
-   setTestvar("b");
-   console.log(testarr)
-   console.log("change")
-}
+// function testFunction() {
+//    setTestvar("b");
+//    console.log(testarr)
+//    console.log("change")
+// }
 // function resetIR(e) {
    
 // }
@@ -1457,7 +1522,7 @@ function testFunction() {
     <main className={styles.main}>
       <div className={[styles.description, 'center-block text-center m-2']} style={{lineHeight: '3rem', zIndex:1}}>
         <span>Simple guitar amp based on <h5><a href="https://tonejs.github.io/" target='blank'>tone js</a></h5></span>
-        <span onClickCapture={testFunction} id="testel">{ testarr[0] }</span>
+        {/* <span onClickCapture={testFunction} id="testel">{ testarr[0] }</span> */}
       </div>
       <div style={{zIndex: 10}}>
          <label htmlFor="ir">Load an <a href="https://en.wikipedia.org/wiki/Impulse_response">Impulse Response</a> file (you can grab it from <a href="https://tonehunt.org/all?filter=ir">here</a> or some other place)</label><br/>
@@ -1474,11 +1539,11 @@ function testFunction() {
       </div>
       <EffectToggle style={{zIndex: 1}} label="Strict fretting" id="SF" checked={false} change={addSF} trueBypass={isSF} setTrueBypass={setIsSF}/>
       <div id="GT">
-            <span>Guitar tuner</span>
             <div id="tuner" style={{ wordBreak: "break-all" }}>
+               <span>Guitar tuner</span>
                <div className="row effect">
-                  <EffectToggle label="Tuner (not affected by other effects)" id="tuner" checked={false} change={addTuner} trueBypass={isTuner} setTrueBypass={setIsTuner}/>
-                  <EffectValue label="A4Value" id="a4value" defaultValue={440} change={changeA4Value} min={430} max={450} trueBypass={isTuner} setTrueBypass={setIsTuner} strict={[1,1]} step={1}/>
+                  <EffectToggle label="Tuner (not affected by other effects)" id="tunertoggle" checked={false} change={addTuner} trueBypass={isTuner} setTrueBypass={setIsTuner}/>
+                  <EffectValue label="A4 Value" id="a4value" defaultValue={440} change={changeA4Value} min={430} max={450} trueBypass={isTuner} setTrueBypass={setIsTuner} strict={[1,1]} step={1}/>
                   { isTuner && <div className="gauge" style={{ "--gauge-bg": "color-mix(in srgb, var(--nav-background) 85%, white)", "--gauge-value": gaugePosition, "--gauge-display-value": `${Math.round(gaugePosition < 50 ? gaugePosition*2 : 200 - 2*gaugePosition)}`, width: "auto", margin: "0.5rlh auto" }}>
                      <div className="ticks">
                         <div className="tithe" style={{ "--gauge-tithe-tick":1 }}></div>
@@ -1550,7 +1615,7 @@ function testFunction() {
       {/* transform: translateY(300px) rotate(315deg) !important; */}
       {/* only add triggers, not whole surface, but you should make strings move */}
       <div id="guitar">
-      <svg viewBox='0 0 1000 900' id="guitarsvg" transform='rotate(45)' style={{marginTop: "-15vh", marginBottom: "-15vh", zIndex: "-1"}} xmlns="http://www.w3.org/2000/svg"><defs
+      <svg viewBox='0 0 1000 900' id="guitarsvg" transform='rotate(45)' style={{marginTop: "-15vh", marginBottom: "-15vh", zIndex: "1"}} xmlns="http://www.w3.org/2000/svg"><defs
      id="defs6">
     <clipPath
        clipPathUnits="userSpaceOnUse"
@@ -3367,35 +3432,36 @@ function testFunction() {
 </svg>
 </div>
 
-      <button id='mic' onClickCapture={allowMicContext} style={{zIndex:1}}>Allow mic context</button>
+      {/* <button id='mic' onClickCapture={allowMicContext} style={{zIndex:1}}>Allow mic context</button> */}
       <h2 className='text-center my-3' style={{zIndex:1}}>Effects:</h2>
       <div className="center-block container" id="effects" style={{width: "80vw"}} effects={effects}>
         <div className="row effect">
           <EffectToggle label="Volume" id="volume" checked={false} change={addVolume} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
+          <span>*this effect also holds your distortion and gain effects, so change it, if you want to have only this effect on</span>
           <EffectValue label="VolumeValue" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={-1000} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
         </div>
         <div className="row effect">
-          <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(distortion,-1)}}>↑</button>
+          {/* <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(distortion,-1)}}>↑</button> */}
           <EffectToggle label="Distortion" id="distortion" checked={false} change={addDistortion} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
-          <EffectValue label="DistortionValue" id="distortionvalue" defaultValue={10} change={changeDistortionValue} min={0} max={10000} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
-          <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(distortion,1)}}>↓</button>
+          <EffectValue label="DistortionValue" id="distortionvalue" defaultValue={5} change={changeDistortionValue} min={0} max={10000} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
+          {/* <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(distortion,1)}}>↓</button> */}
         </div>
         <div className="row effect">
           <EffectToggle label="Gain" id="gain" checked={false} change={addGain} trueBypass={isGain} setTrueBypass={setIsGain}/>
-          <EffectValue label="GainValue" id="gainvalue" defaultValue={250} change={changeGainValue} min={0} max={3.4028234663852886e+38.fromExponent()} trueBypass={isGain} setTrueBypass={setIsGain}/>
+          <EffectValue label="GainValue" id="gainvalue" defaultValue={20} change={changeGainValue} min={0} max={3.4028234663852886e+38.fromExponent()} trueBypass={isGain} setTrueBypass={setIsGain}/>
         </div>
         <div className="row effect">
           <EffectToggle label="Bitcrusher" id="bitcrusher" checked={false} change={addBitcrusher} trueBypass={isBitcrusher} setTrueBypass={setIsBitcrusher}/>
           <EffectValue label="BitcrusherValue" id="bitcrushervalue" defaultValue={10} change={changeBitcrusherValue} min={1} max={16} trueBypass={isBitcrusher} setTrueBypass={setIsBitcrusher} strict={[1,1]}/>
         </div>
         <div className="row effect">
-        <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(chorus,-1)}}>↑</button>
+          {/* <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(chorus,-1)}}>↑</button> */}
           <EffectToggle label="Chorus" id="chorus" checked={false} change={addChorus} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
           <EffectValue label="ChorusFrequencyValue" id="chorusvalue" defaultValue={4} change={changeChorusFrequencyValue} min={0} max={15} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
           <EffectValue label="ChorusDelayTimeValue" id="chorusvalue" defaultValue={2.5} change={changeChorusDelayValue} min={0} max={10} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
           <EffectValue label="ChorusDepthValue" id="chorusvalue" defaultValue={1} change={changeChorusDepthValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
           <EffectValue label="ChorusWetValue" id="chorusvalue" defaultValue={1} change={changeChorusWetValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
-          <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(chorus,1)}}>↓</button>
+          {/* <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(chorus,1)}}>↓</button> */}
         </div>
         <div className="row effect">
           <EffectToggle label="Delay" id="delay" checked={false} change={addDelay} trueBypass={isDelay} setTrueBypass={setIsDelay}/>
