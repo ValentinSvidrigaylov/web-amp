@@ -296,8 +296,8 @@ button {
  #guitar {
   position: relative;
   width: 80vw;
-  height: 80vh;
-  margin: 0 auto;
+  height: 120vh;
+  margin: -30vh auto;
  }
  
  #guitarsvg {

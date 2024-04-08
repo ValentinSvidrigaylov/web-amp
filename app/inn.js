@@ -81,6 +81,8 @@ const [guitarTuning, setGuitarTuning] = useState(['E4','B3','G3','D3','A2','E2']
 const [pitchBinding, setPitchBinding] = useState([...guitarTuning]);
 const [scaleLength, setScaleLength] = useState(647.7);
 
+const [tunerThreshold, setTunerThreshold] = useState(-80);
+
 useEffect(()=>{
   //default values must be the same as here, otherwise effect will be different from the one that is displayed
   let mic_t = new Tone.UserMedia();
@@ -1306,6 +1308,7 @@ useEffect(()=>{
 
 useEffect(()=>{
    if (!isTunerInit&&isTuner) {
+      Tone.start();
       let mic = new Tone.UserMedia();
       mic.output = new Tone.Mono();
       // mic.toDestination()
@@ -1338,6 +1341,7 @@ useEffect(()=>{
       // }, 
       // {}
       // );
+      let GT = document.getElementById("GT");
       let mappedKeys = Object.keys(fft.getValue()).map(e=>fft.getFrequencyOfIndex(Number(e)));
       let mapped_t = fft.getValue();
       let mapped = {}
@@ -1350,7 +1354,8 @@ useEffect(()=>{
       // console.log(Object.entries(mapped).filter(e=>e[1]==max))
       // setTuner(JSON.stringify(Object.entries(mapped).filter(e=>e[1]==max)))
       let cur_frequency = Tone.Frequency(Number(Object.entries(mapped).filter(e=>e[1]==max)[0][0]));
-      if (cur_frequency == 0 || cur_frequency < 0) {
+      if (cur_frequency == 0 || cur_frequency < 0 || max <= tunerThreshold) {
+         GT.style.setProperty("--tuner-background","color-mix(in srgb, var(--nav-background) 85%, white)");
          setTuner("play a note to find its pitch")
          setGaugePosition(50);
          return;
@@ -1360,6 +1365,12 @@ useEffect(()=>{
       setGaugePosition(low_note < high_note ? (low_note.clamp(0,1)/2)*100 : low_note==high_note ? 50 : (1-high_note.clamp(0,1)/2)*100);
       setTuner(`${cur_frequency.toNote()}`)
       setIsTunerInit(true);
+      let tgp = (low_note < high_note ? (low_note.clamp(0,1)/2)*100 : low_note==high_note ? 50 : (1-high_note.clamp(0,1)/2)*100)
+      if (Math.round(tgp < 50 ? tgp*2 : 200 - 2*tgp)>90) {
+         GT.style.setProperty("--tuner-background","#0fb30f");
+      } else {
+         GT.style.setProperty("--tuner-background","color-mix(in srgb, var(--nav-background) 85%, white)");
+      }
       }, 500);
       }).catch(e => {
          // promise is rejected when the user doesn't have or allow mic access
@@ -1486,6 +1497,10 @@ function handleIR(e) {
     reader.readAsDataURL(f.files[0]);
 }
 
+function changeTunerThreshold(value) {
+   setTunerThreshold(value);
+}
+
 // let testarr = [testvar]
 
 // useState(()=>{
@@ -1539,14 +1554,15 @@ function handleIR(e) {
          </div>
       </div>
       <EffectToggle style={{zIndex: 1}} label="Strict fretting" id="SF" checked={false} change={addSF} trueBypass={isSF} setTrueBypass={setIsSF}/>
-      <div id="GT">
+      <div id="GT" style={{ "--tuner-background": "color-mix(in srgb, var(--nav-background) 85%, white)", "-webkit-transition": "background-color 1000ms linear", "-ms-transition": "background-color 1000ms linear", "transition": "background-color 1000ms linear" }}>
             <div id="tuner" style={{ wordBreak: "break-all" }}>
                <span>Guitar tuner</span>
                <div className="row effect">
                   <EffectToggle label="Tuner" id="tunertoggle" checked={false} change={addTuner} trueBypass={isTuner} setTrueBypass={setIsTuner}/>
-                  <span>*not affected by other effects</span>
+                  <span>*not affected by other effects, tuner is not 100% accurate at low frequencies (2^14 resolution <a href="https://en.wikipedia.org/wiki/Fast_Fourier_transform" target='_blank'>Fast Fourier Transform</a>)</span>
                   <EffectValue label="A4 Value" id="a4value" defaultValue={440} change={changeA4Value} min={430} max={450} trueBypass={isTuner} setTrueBypass={setIsTuner} strict={[1,1]} step={1}/>
-                  { isTuner && <div className="gauge" style={{ "--gauge-bg": "color-mix(in srgb, var(--nav-background) 85%, white)", "--gauge-value": gaugePosition, "--gauge-display-value": `${Math.round(gaugePosition < 50 ? gaugePosition*2 : 200 - 2*gaugePosition)}`, width: "auto", margin: "0.5rlh auto" }}>
+                  {/* <EffectValue label="Tuner Threshold" id="tunerthreshold" defaultValue={-80} change={changeTunerThreshold} min={-120} max={0} trueBypass={isTuner} setTrueBypass={setIsTuner} strict={[1,1]} step={1}/> */}
+                  { isTuner && <div className="gauge" style={{ "--gauge-bg": "var(--tuner-background)", "--gauge-value": gaugePosition, "--gauge-display-value": `${Math.round(gaugePosition < 50 ? gaugePosition*2 : 200 - 2*gaugePosition)}`, width: "auto", margin: "0.5rlh auto" }}>
                      <div className="ticks">
                         <div className="tithe" style={{ "--gauge-tithe-tick":1 }}></div>
                         <div className="tithe" style={{ "--gauge-tithe-tick":2 }}></div>
@@ -3440,45 +3456,45 @@ function handleIR(e) {
         <div className="row effect">
           <EffectToggle label="Volume" id="volume" checked={false} change={addVolume} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
           <span>*this effect also holds your distortion and gain effects, so change it, if you want to have only this effect on</span>
-          <EffectValue label="VolumeValue" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={-1000} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
+          <EffectValue label="Volume Value" id="volumevalue" defaultValue={10} change={changeVolumeValue} min={-1000} max={1000} trueBypass={isVolume} setTrueBypass={setIsVolume}/>
         </div>
         <div className="row effect">
           {/* <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(distortion,-1)}}>↑</button> */}
           <EffectToggle label="Distortion" id="distortion" checked={false} change={addDistortion} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
-          <EffectValue label="DistortionValue" id="distortionvalue" defaultValue={5} change={changeDistortionValue} min={0} max={10000} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
+          <EffectValue label="Distortion Value" id="distortionvalue" defaultValue={5} change={changeDistortionValue} min={0} max={10000} trueBypass={isDistortion} setTrueBypass={setIsDistortion}/>
           {/* <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(distortion,1)}}>↓</button> */}
         </div>
         <div className="row effect">
           <EffectToggle label="Gain" id="gain" checked={false} change={addGain} trueBypass={isGain} setTrueBypass={setIsGain}/>
-          <EffectValue label="GainValue" id="gainvalue" defaultValue={20} change={changeGainValue} min={0} max={3.4028234663852886e+38.fromExponent()} trueBypass={isGain} setTrueBypass={setIsGain}/>
+          <EffectValue label="Gain Value" id="gainvalue" defaultValue={20} change={changeGainValue} min={0} max={3.4028234663852886e+38.fromExponent()} trueBypass={isGain} setTrueBypass={setIsGain}/>
         </div>
         <div className="row effect">
           <EffectToggle label="Bitcrusher" id="bitcrusher" checked={false} change={addBitcrusher} trueBypass={isBitcrusher} setTrueBypass={setIsBitcrusher}/>
-          <EffectValue label="BitcrusherValue" id="bitcrushervalue" defaultValue={10} change={changeBitcrusherValue} min={1} max={16} trueBypass={isBitcrusher} setTrueBypass={setIsBitcrusher} strict={[1,1]}/>
+          <EffectValue label="Bitcrusher Value" id="bitcrushervalue" defaultValue={10} change={changeBitcrusherValue} min={1} max={16} trueBypass={isBitcrusher} setTrueBypass={setIsBitcrusher} strict={[1,1]}/>
         </div>
         <div className="row effect">
           {/* <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(chorus,-1)}}>↑</button> */}
           <EffectToggle label="Chorus" id="chorus" checked={false} change={addChorus} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
-          <EffectValue label="ChorusFrequencyValue" id="chorusvalue" defaultValue={4} change={changeChorusFrequencyValue} min={0} max={15} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
-          <EffectValue label="ChorusDelayTimeValue" id="chorusvalue" defaultValue={2.5} change={changeChorusDelayValue} min={0} max={10} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
-          <EffectValue label="ChorusDepthValue" id="chorusvalue" defaultValue={1} change={changeChorusDepthValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
-          <EffectValue label="ChorusWetValue" id="chorusvalue" defaultValue={1} change={changeChorusWetValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
+          <EffectValue label="Chorus Frequency Value" id="chorusvalue" defaultValue={4} change={changeChorusFrequencyValue} min={0} max={15} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
+          <EffectValue label="Chorus Delay Time Value" id="chorusvalue" defaultValue={2.5} change={changeChorusDelayValue} min={0} max={10} trueBypass={isChorus} setTrueBypass={setIsChorus}/>
+          <EffectValue label="Chorus Depth Value" id="chorusvalue" defaultValue={1} change={changeChorusDepthValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
+          <EffectValue label="Chorus Wet Value" id="chorusvalue" defaultValue={1} change={changeChorusWetValue} min={0} max={1} trueBypass={isChorus} setTrueBypass={setIsChorus} strict={[1,1]}/>
           {/* <button className='center-block p-0 arrow-sign' onClickCapture={()=>{handlePositionChange(chorus,1)}}>↓</button> */}
         </div>
         <div className="row effect">
           <EffectToggle label="Delay" id="delay" checked={false} change={addDelay} trueBypass={isDelay} setTrueBypass={setIsDelay}/>
           <span>*value of 1 is a looper</span>
-          <EffectValue label="DelayValue" id="delay" defaultValue={0.1} change={changeDelayValue} min={0} max={1} trueBypass={isDelay} setTrueBypass={setIsDelay} strict={[1,1]}/>
+          <EffectValue label="Delay Value" id="delay" defaultValue={0.1} change={changeDelayValue} min={0} max={1} trueBypass={isDelay} setTrueBypass={setIsDelay} strict={[1,1]}/>
         </div>
         <div className="row effect">
           <EffectToggle label="Reverb" id="reverb" checked={false} change={addReverb} trueBypass={isReverb} setTrueBypass={setIsReverb}/>
           <span>*values above 150 requires a lot of memory, setting this above 150 may cause browser to crash</span>
-          <EffectValue label="ReverbValue" id="reverb" defaultValue={30} change={changeReverbValue} min={0} max={30} trueBypass={isReverb} setTrueBypass={setIsReverb}/>
+          <EffectValue label="Reverb Value" id="reverb" defaultValue={30} change={changeReverbValue} min={0} max={30} trueBypass={isReverb} setTrueBypass={setIsReverb}/>
         </div>
         <div className="row effect">
-          <EffectToggle label="PitchShifter" id="pitchshifter" checked={false} change={addPitchShifter} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter}/>
-          <EffectValue label="PitchShifterValue" id="pitchshiftervalue" defaultValue={-12} change={changePitchShifterValue} min={-24} max={24} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter}/>
-          <EffectValue label="PitchShifterWetValue" id="pitchshifterwetvalue" defaultValue={1} change={changePitchShifterWetValue} min={0} max={1} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter} strict={[1,1]}/>
+          <EffectToggle label="Pitch Shifter" id="pitchshifter" checked={false} change={addPitchShifter} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter}/>
+          <EffectValue label="Pitch Shifter Value" id="pitchshiftervalue" defaultValue={-12} change={changePitchShifterValue} min={-24} max={24} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter}/>
+          <EffectValue label="Pitch Shifter Wet Value" id="pitchshifterwetvalue" defaultValue={1} change={changePitchShifterWetValue} min={0} max={1} trueBypass={isPitchShifter} setTrueBypass={setIsPitchShifter} strict={[1,1]}/>
         </div>
       </div>
     </main>
