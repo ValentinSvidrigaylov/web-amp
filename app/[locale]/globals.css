@@ -1,0 +1,354 @@
+:root {
+  --max-width: 1100px;
+  --border-radius: 12px;
+  --font-mono: ui-monospace, Menlo, Monaco, 'Cascadia Mono', 'Segoe UI Mono',
+    'Roboto Mono', 'Oxygen Mono', 'Ubuntu Monospace', 'Source Code Pro',
+    'Fira Mono', 'Droid Sans Mono', 'Courier New', monospace;
+
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+
+  --primary-glow: conic-gradient(
+    from 180deg at 50% 50%,
+    #16abff33 0deg,
+    #0885ff33 55deg,
+    #54d6ff33 120deg,
+    #0071ff33 160deg,
+    transparent 360deg
+  );
+  --secondary-glow: radial-gradient(
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0)
+  );
+
+  --tile-start-rgb: 239, 245, 249;
+  --tile-end-rgb: 228, 232, 233;
+  --tile-border: conic-gradient(
+    #00000080,
+    #00000040,
+    #00000030,
+    #00000020,
+    #00000010,
+    #00000010,
+    #00000080
+  );
+
+  --callout-rgb: 238, 240, 241;
+  --callout-border-rgb: 172, 175, 176;
+  --card-rgb: 180, 185, 188;
+  --card-border-rgb: 131, 134, 135;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+
+    --primary-glow: radial-gradient(rgba(1, 65, 255, 0.4), rgba(1, 65, 255, 0));
+    --secondary-glow: linear-gradient(
+      to bottom right,
+      rgba(1, 65, 255, 0),
+      rgba(1, 65, 255, 0),
+      rgba(1, 65, 255, 0.3)
+    );
+
+    --tile-start-rgb: 2, 13, 46;
+    --tile-end-rgb: 2, 5, 19;
+    --tile-border: conic-gradient(
+      #ffffff80,
+      #ffffff40,
+      #ffffff30,
+      #ffffff20,
+      #ffffff10,
+      #ffffff10,
+      #ffffff80
+    );
+
+    --callout-rgb: 20, 20, 20;
+    --callout-border-rgb: 108, 108, 108;
+    --card-rgb: 100, 100, 100;
+    --card-border-rgb: 200, 200, 200;
+
+    /* --background: #242424; */
+  }
+}
+
+html[data-theme="dark"] {
+  --background: #242424;
+  --nav-background: #cfcfcf;
+  --color: white;
+  --contrast-color: black;
+}
+
+html[data-theme="dark"] a, #CS {
+  --link-color: #3284e2;
+}
+
+html[data-theme="light"] {
+  --background: #cfcfcf;
+  --nav-background: #242424;
+  --color: black;
+  --contrast-color: white;
+}
+
+html[data-theme="light"] a, #CS {
+  --link-color: #1f7ae2;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html, body {
+  height: 100vh;
+  max-width: 100vw;
+  /* overflow-x: auto; */
+  overflow-x: hidden;
+}
+
+body {
+  color: var(--color) !important;
+  /* background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb)); */
+  background-color: var(--background) !important;
+}
+
+input {
+  color: var(--color) !important;
+  background-color: color-mix(in srgb, var(--background) 80%, white);
+}
+
+/* input[type="file"] {
+  color: white !important;
+} */
+
+a {
+  color: var(--link-color) !important;
+  text-decoration: none !important;
+}
+
+a:hover {
+  text-decoration: underline !important
+}
+
+a:visited {
+  color: color-mix(in srgb, var(--link-color) 95%, black) !important;
+}
+
+html {
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+button {
+  padding: 1em;
+  border-radius: 20% !important;
+  box-shadow: var(--nav-background) 0 0 4px 4px;
+}
+
+.col {
+  margin: 1em;
+}
+
+.center-block {
+  display: block;
+  margin-left: auto;
+  margin-right: auto
+}
+
+#synth {
+  /* width: 80vw; */
+  overflow-x: auto !important;
+}
+
+.effect {
+  border: 3px solid white;
+  border-radius: 15px;
+  box-shadow: var(--nav-background) 0px 0px 20px 1px;
+  margin: 1rem;
+}
+
+.effect input[type="number"] {
+  position: relative;
+  cursor: pointer;
+  width: 15vw !important;
+  margin: 1rem !important;
+  
+  /* opacity: 0;
+  height: 0;
+  width: 0; */
+}
+
+.effect-toggle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 25px;
+  width: 25px;
+  background-color: #eee;
+}
+
+#distortion[checked] {
+  color: red;
+}
+
+.arrow-sign {
+  width: 3ch !important;
+  margin: 1rlh auto !important;
+}
+
+::-webkit-scrollbar {
+  background-color: color-mix(in srgb, var(--background) 50%, black);
+   width: 0.75vw;
+  /* height: 1rlh; */
+}
+
+/* ::-webkit-scrollbar:horizontal {
+  height: 1vh;
+} */
+
+::-webkit-scrollbar-track {
+  background-color: color-mix(in srgb, var(--background) 80%, white);
+} 
+
+::-webkit-scrollbar-thumb {
+  /* background-color: color-mix(in srgb, var(--background) 50%, white); */
+  background-color: var(--nav-background);
+  border-radius: 15px;  
+}
+
+::-webkit-scrollbar-corner {
+  background-color: color-mix(in srgb, var(--nav-background) 90%, white);
+}
+
+/* Buttons */
+::-webkit-scrollbar-button:single-button {
+  background-color: #bbbbbb;
+  display: block;
+  border-style: solid;
+  height: 13px;
+  width: 16px;
+}
+/* Up */
+::-webkit-scrollbar-button:single-button:vertical:decrement {
+  border-width: 0 8px 8px 8px;
+  border-color: color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 40%, white) color-mix(in srgb, var(--background) 80%, white);
+}
+
+::-webkit-scrollbar-button:single-button:vertical:decrement:hover {
+  border-color: color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 30%, white) color-mix(in srgb, var(--background) 70%, white);
+}
+/* Down */
+::-webkit-scrollbar-button:single-button:vertical:increment {
+  border-width: 8px 8px 0 8px;
+  border-color: color-mix(in srgb, var(--background) 40%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white);
+}
+
+::-webkit-scrollbar-button:vertical:single-button:increment:hover {
+  border-color: color-mix(in srgb, var(--background) 30%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white);
+}
+/* Right */
+::-webkit-scrollbar-button:single-button:horizontal:increment {
+  border-width: 8px 0 8px 8px;
+  border-color: color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 40%, white);
+}
+
+::-webkit-scrollbar-button:single-button:horizontal:increment:hover {
+  border-color: color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 30%, white);
+}
+/* Left */
+::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  border-width: 8px 8px 8px 0;
+  border-color: color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 40%, white) color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 80%, white);
+}
+
+::-webkit-scrollbar-button:single-button:horizontal:decrement:hover {
+  border-color: color-mix(in srgb, var(--background) 80%, white) color-mix(in srgb, var(--background) 30%, white) color-mix(in srgb, var(--background) 70%, white) color-mix(in srgb, var(--background) 70%, white);
+}
+
+.scaling-svg-container {
+  position: relative; 
+  height: 0; 
+  width: 100%; 
+  padding: 0;
+  padding-bottom: 100%; 
+  /* override this inline for aspect ratio other than square */
+ }
+ .scaling-svg {
+  position: absolute; 
+  height: 100%; 
+  width: 100%; 
+  left: 0; 
+  top: 0;
+ }
+
+ #guitar {
+  z-index: -1;
+  position: relative;
+  width: 80vw;
+  height: 120vh;
+  margin: -30vh auto;
+ }
+ 
+ #guitarsvg {
+  position: absolute;
+  left: 0;
+  top: 15%;
+  width: 100%;
+  height: 100%;
+ }
+
+/* svg path#string1wiggly {
+  d: path("M 0 0 Q 50 800 0 1600") !important;
+  transition: 30s;
+  animation: stringwiggle 10.5s linear alternate infinite;
+}
+
+@keyframes stringwiggle {
+  from {
+    d: path("M 0 0 Q 50 800 0 1600") !important;
+  }
+
+  to {
+    d: path("M 0 0 Q 0 0 0 1600") !important;
+  }
+} */
+
+#SF + .track + label {
+  margin-left: 1rem;
+}
+
+html #CS {
+  max-width: 7.5rem;
+  height: 7.5rem;
+  border: 3px solid black;
+  background: var(--link-color) !important;
+  z-index: 10;
+}
+
+html #CS > * {
+  vertical-align: middle;
+  margin: auto auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gauge{position:relative;background:var(--gauge-bg);border:.05em solid #222;border-radius:50%;min-width:300px;min-height:300px;font-weight:700;font-size:34px}.gauge .ticks{position:absolute;width:100%;height:100%;top:0;left:0}.gauge .ticks .min{background:#000;position:relative;left:0;top:50%;width:100%;height:1%;margin-bottom:-1%;background:linear-gradient(90deg,rgba(2,0,36,0) 0,rgba(0,0,0,0) 4%,#000 4%,#000 15%,rgba(0,0,0,0) 15%);transform:rotate(-45deg)}.gauge .ticks .mid{background:#000;position:relative;left:0;top:50%;width:100%;height:1%;margin-bottom:-1%;background:linear-gradient(90deg,rgba(2,0,36,0) 0,rgba(0,0,0,0) 4%,#000 4%,#000 15%,rgba(0,0,0,0) 15%);transform:rotate(90deg)}.gauge .ticks .max{background:#000;position:relative;left:0;top:50%;width:100%;height:1%;margin-bottom:-1%;background:linear-gradient(90deg,rgba(2,0,36,0) 0,rgba(0,0,0,0) 4%,#000 4%,#000 15%,rgba(0,0,0,0) 15%);transform:rotate(225deg)}.gauge .ticks .tithe{transform:rotate(calc(27deg * var(--gauge-tithe-tick) - 45deg));background:#000;position:relative;left:0;top:50%;width:100%;height:1%;margin-bottom:-1%;background:linear-gradient(90deg,rgba(2,0,36,0) 0,rgba(0,0,0,0) 10%,#000 10%,#000 15%,rgba(0,0,0,0) 15%)}.gauge .tick-circle{position:absolute;top:15%;left:15%;width:calc(70% - .1em);height:calc(70% - .1em);border-left:.1em solid;border-top:.1em solid;border-right:.1em solid;border-bottom:.1em solid transparent;border-radius:50%}.gauge .needle{transform:rotate(calc(270deg * calc(var(--gauge-value,0deg)/ 100) - 45deg));background:#000;position:relative;left:0;top:49%;width:100%;height:4%;margin-bottom:-4%;background:linear-gradient(90deg,rgba(2,0,36,0) 0,rgba(0,0,0,0) 24%,#000 24%,#000 30%,rgba(0,0,0,0) 50%)}.gauge .needle .needle-head{position:relative;top:15%;left:22.5%;width:2.7%;height:70%;background-color:#000;transform:rotate(-45deg)}.gauge .labels{position:absolute;width:100%;height:100%}.gauge .labels .value-label{position:relative;top:75%;left:50%;transform:translateX(-50%)}.gauge .labels .value-label::after{counter-reset:gauge-value var(--gauge-display-value);content:counter(gauge-value)}.guide-x,.guide-y{background-color:orange;visibility:visible;position:absolute;left:50%;top:0;width:1px;height:100%}.guide-y{left:0;top:50%;width:100%;height:1px}
+
+#GT {
+  width: 80vw;
+}

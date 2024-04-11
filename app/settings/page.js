@@ -1,10 +1,5 @@
-import Inner from "./inn.js"
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: 'Settings',
-  description: 'Settings and mapping page',
-}
-
-export default function Settings() {
-  return <Inner/>
+export default function RootPage() {
+  redirect("en/settings");
 }

@@ -1,10 +1,5 @@
-import Inner from "./inn.js";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: 'History',
-  description: 'History of guitars and equipment',
-}
-
-export default function History() {
-  return <Inner/>
+export default function RootPage() {
+  redirect("en/history");
 }

@@ -1,10 +1,5 @@
-import Inner from "./inn.js";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-    title: 'Synth',
-    description: 'Simple digital synth based on tone js',
-  }
-
-export default function Synth() {
-    return <Inner/>
+export default function RootPage() {
+  redirect("en/synth");
 }
