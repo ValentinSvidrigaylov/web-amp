@@ -101,7 +101,7 @@
     },
     "LocaleSwitcher": {
         "label": "Change language",
-        "locale": "{locale, select, ru {ru} en {🇺🇸} other {Unknown}}"
+        "locale": "{locale, select, ru {ru} en {en} other {Unknown}}"
     },
     "NotFoundPage": {
         "description": "Page you requested doesn't exist"
