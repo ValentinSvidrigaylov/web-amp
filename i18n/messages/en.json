@@ -59,7 +59,7 @@
     },
     "SettingsPage": {
         "data_hint": "*Clearing browser's cache or sites' data will erase these settings",
-        "mapping_hint": "Please, write full name of key (if it is not one letter).<br/> All of these bindings are clickable so you can use instruments without a keyboard. For full compatibility use only english keyboard layout.",
+        "mapping_hint": "Please, write full name of key (if it is not one letter). All of these bindings are clickable so you can use instruments without a keyboard. For full compatibility use only english keyboard layout.",
         "mapping_title": "Key mapping",
         "mapping_synth_title": "Synth",
         "mapping_synth_keys_description": "Sets a keyboard key that represents a synth key",
