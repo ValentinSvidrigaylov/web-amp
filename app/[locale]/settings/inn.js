@@ -163,20 +163,24 @@ useEffect(()=>{
         { t("mapping_synth_keys_description") }
       </div>
       <div id="key-mapping-section"></div>
-      <div id="controls-mapping-section">
-        <div className={styles.description}>
+      <div className={styles.description}>
           { t("mapping_synth_octaves_description") }
         </div>
-        <div className='m-1'>
+      <div id="controls-mapping-section">
+        <div className='m-2'>
           <label htmlFor='octave+'>{ t("mapping_synth_octaves_increase_label") }</label>
           <input id="octave+" type='text' value={increaseOctaveKey} onChange={(e)=>{increaseOctave(e)}}/>
         </div>
-        <div className='m-1'>
+        <div className='m-2'>
           <label htmlFor='octave-'>{ t("mapping_synth_octaves_decrease_label") }</label>
           <input id="octave-" type='text' value={decreaseOctaveKey} onChange={(e)=>{decreaseOctave(e)}}/>
         </div>
       </div>
       <h3>{ t("mapping_guitar_title") }</h3>
+      <div>
+        <h4>{ t("mapping_guitar_fixedbindings_title") }</h4>
+        <div dangerouslySetInnerHTML={{__html: t.raw('mapping_guitar_fixedbindings_description')}} className={styles.description}/>
+      </div>
       <div className='m-1'>
         <div className={styles.description}>
           { t("mapping_guitar_stringsamount_description") }

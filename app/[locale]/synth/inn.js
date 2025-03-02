@@ -625,46 +625,46 @@ useEffect(()=>{
             renderSynth(octave, keysLength);
         },[renderSynth])
 
-        function renderSampler() {
-            let samplesOuter = document.getElementById("samples");
-            samplesOuter.innerHTML = '';
-            let samples = JSON.parse(localStorage.getItem("samples")) || (()=>{localStorage.setItem("samples", JSON.stringify({})); return {}})() //names (keys) are customisable
-            for (let e in samples) {
-                let el = document.createElement("div");
-                let sampleNameEl = document.createElement("h3");
-                sampleNameEl.style.cssText = "text-align: center";
-                sampleNameEl.textContent = e
-                let settingsEl = document.createElement("div");
-                settingsEl.style.cssText = "width: 80%; height: 8rlh; border: 2px dashed var(--nav-background); display: block; margin: 0.6rlh auto;";
-                //4/4 8 notes are default
+        // function renderSampler() {
+        //     let samplesOuter = document.getElementById("samples");
+        //     samplesOuter.innerHTML = '';
+        //     let samples = JSON.parse(localStorage.getItem("samples")) || (()=>{localStorage.setItem("samples", JSON.stringify({})); return {}})() //names (keys) are customisable
+        //     for (let e in samples) {
+        //         let el = document.createElement("div");
+        //         let sampleNameEl = document.createElement("h3");
+        //         sampleNameEl.style.cssText = "text-align: center";
+        //         sampleNameEl.textContent = e
+        //         let settingsEl = document.createElement("div");
+        //         settingsEl.style.cssText = "width: 80%; height: 8rlh; border: 2px dashed var(--nav-background); display: block; margin: 0.6rlh auto;";
+        //         //4/4 8 notes are default
                 
-                el.appendChild(sampleNameEl);
-                el.appendChild(settingsEl);
-                samplesOuter.appendChild(el);
-            }
-        }
+        //         el.appendChild(sampleNameEl);
+        //         el.appendChild(settingsEl);
+        //         samplesOuter.appendChild(el);
+        //     }
+        // }
 
-        function processSampler(e) {
-            console.log(e.target)
-            let sampleName = e.target.querySelector("input#sampleName").value;
-            let noteName = e.target.querySelector("input#noteName").value;
-            console.log(sampleName);
-            console.log(noteName);
-            localStorage.setItem("samples", JSON.stringify({...JSON.parse(localStorage.getItem("samples")), [sampleName ? sampleName : noteName]: noteName}));
-        }
+        // function processSampler(e) {
+        //     console.log(e.target)
+        //     let sampleName = e.target.querySelector("input#sampleName").value;
+        //     let noteName = e.target.querySelector("input#noteName").value;
+        //     console.log(sampleName);
+        //     console.log(noteName);
+        //     localStorage.setItem("samples", JSON.stringify({...JSON.parse(localStorage.getItem("samples")), [sampleName ? sampleName : noteName]: noteName}));
+        // }
 
-        function setBPMtext(e) {
-            console.log(e)
-            console.log(lastTap)
-            if (lastTap) {
-                setBPM(Math.round(1000*60/(e.timeStamp-lastTap)));
-            }
-            setLastTap(e.timeStamp);
-        }
+        // function setBPMtext(e) {
+        //     console.log(e)
+        //     console.log(lastTap)
+        //     if (lastTap) {
+        //         setBPM(Math.round(1000*60/(e.timeStamp-lastTap)));
+        //     }
+        //     setLastTap(e.timeStamp);
+        // }
 
-        useEffect(()=>{
-            renderSampler();
-        },[])
+        // useEffect(()=>{
+        //     renderSampler();
+        // },[])
 
      return (
     <main className={styles.main}>
@@ -701,7 +701,7 @@ useEffect(()=>{
             </div>
             </div>
         </div>
-        <div id="sampler" style={{ border: "3px solid black", borderRadius: "15px", background: "color-mix(in srgb, var(--background) 90%, white)", margin: "1.5rlh 0", padding: "0.5rlh", width: "80vw" }}>
+        {/* <div id="sampler" style={{ border: "3px solid black", borderRadius: "15px", background: "color-mix(in srgb, var(--background) 90%, white)", margin: "1.5rlh 0", padding: "0.5rlh", width: "80vw" }}>
             <span style={{textAlign: "center", display: "block", margin: "0.4rlh auto"}}>{ t("drummachine_label") }</span>
             <div id="samplerouter" style={{ display: "flex", justifyContent: "center", flexDirection: "column", alignItems: "center" }}>
                 <div id="BPMTapper">
@@ -719,7 +719,7 @@ useEffect(()=>{
             <div id="samples">
 
             </div>
-        </div>
+        </div> */}
         <div id="synth"></div>
     </main>
     );

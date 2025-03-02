@@ -78,7 +78,7 @@ export default function Inner() {
         mouseOnImage.x = e.pageX - trackedImage.offsetParent.offsetLeft;
         mouseOnImage.y = e.pageY - trackedImage.offsetParent.offsetTop;
         //parseFloat(Number.parseFloat().toFixed(2))
-        output.value = `x: ${ parseFloat(mouseOnImage.x / actualImageSize.width * 100).toFixed(2) /* since our outer div's width is equals to image width, we need to extract 100% from actual percentage; upd: fixed by tracking offset from parent */  }%, y: ${ parseFloat(mouseOnImage.y / actualImageSize.height * 100).toFixed(2) }%`;
+        // output.value = `x: ${ parseFloat(mouseOnImage.x / actualImageSize.width * 100).toFixed(2) /* since our outer div's width is equals to image width, we need to extract 100% from actual percentage; upd: fixed by tracking offset from parent */  }%, y: ${ parseFloat(mouseOnImage.y / actualImageSize.height * 100).toFixed(2) }%`;
         console.log(`${ parseFloat(mouseOnImage.x / actualImageSize.width * 100).toFixed(2)};${parseFloat(mouseOnImage.y / actualImageSize.height * 100).toFixed(2)}`);
         sendMessage("EventSystem", "TeleportPlayerToSpecificPos", `${parseFloat(mouseOnImage.y / actualImageSize.height * 100).toFixed(2)};${parseFloat(mouseOnImage.x / actualImageSize.width * 100).toFixed(2)}`);
       });
@@ -126,9 +126,11 @@ export default function Inner() {
       if (typeof window != "undefined") {
         characterDiv = document.getElementById("character");
         trackedImage = document.querySelector('img#trackedImage');  
-        characterDiv.style.visibility = "visible";
-        characterDiv.style.left = `${trackedImage.clientWidth*(y*0.01 - characterMarkerSizePercentage*0.5)}px`;
-        characterDiv.style.top = `${trackedImage.clientHeight*(x*0.01 - characterMarkerSizePercentage*0.5)}px`;
+        if (characterDiv) {
+          characterDiv.style.visibility = "visible";
+          characterDiv.style.left = `${trackedImage.clientWidth*(y*0.01 - characterMarkerSizePercentage*0.5)}px`;
+          characterDiv.style.top = `${trackedImage.clientHeight*(x*0.01 - characterMarkerSizePercentage*0.5)}px`;
+        }
       }
     }, []);
 

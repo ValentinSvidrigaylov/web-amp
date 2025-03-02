@@ -1,5 +1,8 @@
+nav {
+    z-index: calc(Infinity) !important;
+}
+
 .navbar {
-    z-index: 2147483646;
     /* width: 100vw; */
     /* padding: 1rlh; */
     /* padding-top: 1.5em; */

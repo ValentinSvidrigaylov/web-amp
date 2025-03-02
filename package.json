@@ -17,7 +17,7 @@
     "react-dom": "^18",
     "react-unity": "^0.0.19",
     "react-unity-webgl": "^9.4.3",
-    "tone": "^14.7.77"
+    "tone": "^15.1.16"
   },
   "devDependencies": {
     "@types/node": "20.8.9",
